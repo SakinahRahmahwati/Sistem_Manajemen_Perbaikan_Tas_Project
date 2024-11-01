@@ -428,7 +428,7 @@ body>.navbar-collapse .nav {
 
 .sidebar .nav li .nav-link,
 body>.navbar-collapse .nav li .nav-link {
-    color: #FFFFFF;
+    color: #4d606d;
     margin: 5px 15px;
     opacity: .86;
     border-radius: 4px;
@@ -438,7 +438,7 @@ body>.navbar-collapse .nav li .nav-link {
 
 .sidebar .nav li .nav-link:hover,
 body>.navbar-collapse .nav li .nav-link:hover {
-    background: rgba(255, 255, 255, 0.13);
+    background: #637888;
     opacity: 1;
 }
 
@@ -457,22 +457,22 @@ body>.navbar-collapse .nav li .nav-link i {
     font-size: 28px;
     margin-right: 15px;
     width: 30px;
-    text-align: center;
+    text-align: left;
     vertical-align: middle;
     float: left;
 }
 
 .sidebar .nav li:hover .nav-link,
 body>.navbar-collapse .nav li:hover .nav-link {
-    background: rgba(255, 255, 255, 0.13);
+    background: #c5d3de;
     opacity: 1;
 }
 
 .sidebar .nav li.active .nav-link,
 body>.navbar-collapse .nav li.active .nav-link {
-    color: #FFFFFF;
+    color: #637888;
     opacity: 1;
-    background: rgba(255, 255, 255, 0.23);
+    background: #c5d3de;
 }
 
 .sidebar .nav li.separator,
@@ -520,7 +520,8 @@ body>.navbar-collapse .nav .nav-link {
 .sidebar .logo,
 body>.navbar-collapse .logo {
     padding: 10px 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1px solid #f5dd42;
+    background-color: #f5dd42;
 }
 
 .sidebar .logo p,
@@ -539,7 +540,7 @@ body>.navbar-collapse .logo .simple-text {
     padding: 5px 0px;
     display: block;
     font-size: 18px;
-    color: #FFFFFF;
+    color: #000000;
     text-align: center;
     font-weight: 400;
     line-height: 30px;
@@ -615,6 +616,18 @@ body>.navbar-collapse[data-color="black"]:after {
     background-size: 150% 150%;
 }
 
+.sidebar[data-color="white"]:after,
+body>.navbar-collapse[data-color="white"]:after {
+    background: #ffffff;
+    background: -moz-linear-gradient(top, #ffffff 0%, #ffffff 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #ffffff), color-stop(100%, #ffffff));
+    background: -webkit-linear-gradient(top, #ffffff 0%, #ffffff 100%);
+    background: -o-linear-gradient(top, #ffffff 0%, #ffffff 100%);
+    background: -ms-linear-gradient(top, #ffffff 0%, #ffffff 100%);
+    background: linear-gradient(to bottom, #ffffff 0%, #ffffff 100%);
+    background-size: 150% 150%;
+}
+
 .sidebar[data-color="blue"]:after,
 body>.navbar-collapse[data-color="blue"]:after {
     background: #1F77D0;
@@ -651,15 +664,15 @@ body>.navbar-collapse[data-color="green"]:after {
     background-size: 150% 150%;
 }
 
-.sidebar[data-color="yellow"]:after,
-body>.navbar-collapse[data-color="yellow"]:after {
-    background: #f5d742;
-    background: -moz-linear-gradient(top, #f5d742 0%, #ff5221 100%);
-    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #f5d742), color-stop(100%, #ff5221));
-    background: -webkit-linear-gradient(top, #f5d742 0%, #ff5221 100%);
-    background: -o-linear-gradient(top, #f5d742 0%, #ff5221 100%);
-    background: -ms-linear-gradient(top, #f5d742 0%, #ff5221 100%);
-    background: linear-gradient(to bottom, #f5d742 0%, #ff5221 100%);
+.sidebar[data-color="orange"]:after,
+body>.navbar-collapse[data-color="orange"]:after {
+    background: #FFA534;
+    background: -moz-linear-gradient(top, #FFA534 0%, #ff5221 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #FFA534), color-stop(100%, #ff5221));
+    background: -webkit-linear-gradient(top, #FFA534 0%, #ff5221 100%);
+    background: -o-linear-gradient(top, #FFA534 0%, #ff5221 100%);
+    background: -ms-linear-gradient(top, #FFA534 0%, #ff5221 100%);
+    background: linear-gradient(to bottom, #FFA534 0%, #ff5221 100%);
     background-size: 150% 150%;
 }
 
@@ -688,7 +701,7 @@ body>.navbar-collapse[data-color="purple"]:after {
 }
 
 .main-panel {
-    background: rgba(203, 203, 210, 0.15);
+    background: #ebf2f2;
     position: relative;
     float: right;
     width: calc(100% - 260px);
@@ -701,7 +714,7 @@ body>.navbar-collapse[data-color="purple"]:after {
 }
 
 .main-panel>.footer {
-    border-top: 1px solid #e7e7e7;
+    border-top: 1px solid #ebf2f2;
 }
 
 .main-panel .navbar {
@@ -1963,7 +1976,7 @@ fieldset[disabled] .form-control {
     border-radius: 0;
     min-height: 50px;
     max-height: 61px;
-    background-color: rgba(255, 255, 255, 0.96);
+    background-color: #f5dd42;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
