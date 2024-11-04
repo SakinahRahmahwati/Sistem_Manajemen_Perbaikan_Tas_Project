@@ -2,8 +2,8 @@
     <footer class="footer">
         <div class="container-fluid">
             <nav>
-                <ul class="footer-menu">
-                    <li>
+                <!-- <ul class="footer-menu"> -->
+                    <!-- <li>
                         <a href="#">
                             Home
                         </a>
@@ -23,10 +23,9 @@
                             Blog
                         </a>
                     </li>
-                </ul>
+                </ul> -->
                 <p class="copyright text-center">
                     ©2024
-                    <a href="http://www.creative-tim.com">Creative Tim</a>, made with love for a better web
                 </p>
             </nav>
         </div>
