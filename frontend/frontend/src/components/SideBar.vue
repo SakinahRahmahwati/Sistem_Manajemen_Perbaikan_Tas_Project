@@ -7,60 +7,70 @@
      -->
         <div class="sidebar-wrapper">
             <div class="logo">
-                <a href="#" class="simple-text">
+                <router-link to="" class="simple-text">
                     Dian Tas
-                </a>
+                </router-link>
             </div>
             <ul class="nav">
-                <li class="nav-item active">
-                    <a class="nav-link" href="dashboard.html">
+                <li class="nav-item" :class="{ active: isActive('/dashboard') || isActive('/') }">
+                    <router-link class="nav-link" to="/dashboard">
                         <i class="bi bi-house-door-fill"></i>
                         <p>Dashboard</p>
-                    </a>
+                    </router-link>
                 </li>
-                <li>
-                    <a class="nav-link" href="./user.html">
+                <li class="nav-item" :class="{ active: isActive('/perbaikantas') }">
+                    <router-link class="nav-link" to="/perbaikantas">
                         <i class="bi bi-briefcase-fill"></i>
                         <p>Perbaikan Tas</p>
-                    </a>
+                    </router-link>
                 </li>
-                <li>
-                    <a class="nav-link" href="./table.html">
+                <li class="nav-item" :class="{ active: isActive('/jenislayanan') }">
+                    <router-link class="nav-link" to="/jenislayanan">
                         <i class="bi bi-gear"></i>
                         <p>Jenis Layanan</p>
-                    </a>
+                    </router-link>
                 </li>
-                <li>
-                    <a class="nav-link" href="./typography.html">
+                <li class="nav-item" :class="{ active: isActive('/material') }">
+                    <router-link class="nav-link" to="/material">
                         <i class="bi bi-list-ul"></i>
                         <p>Material</p>
-                    </a>
+                    </router-link>
                 </li>
-                <li>
-                    <a class="nav-link" href="./icons.html">
+                <li class="nav-item" :class="{ active: isActive('') }">
+                    <router-link class="nav-link" to="#">
                         <i class="bi bi-people-fill"></i>
                         <p>Pelanggan</p>
-                    </a>
+                    </router-link>
                 </li>
-                <li>
-                    <a class="nav-link" href="./maps.html">
+                <li class="nav-item" :class="{ active: isActive('') }">
+                    <router-link class="nav-link" to="#">
                         <i class="bi bi-boxes"></i>
                         <p>Pemasok</p>
-                    </a>
+                    </router-link>
                 </li>
-                <li>
-                    <a class="nav-link" href="./notifications.html">
+                <li class="nav-item" :class="{ active: isActive('') }">
+                    <router-link class="nav-link" to="#">
                         <i class="bi bi-cash-coin"></i>
                         <p>Laporan Keuangan</p>
-                    </a>
+                    </router-link>
                 </li>
-                <li>
-                    <a class="nav-link" href="./icons.html">
+                <li class="nav-item" :class="{ active: isActive('') }">
+                    <router-link class="nav-link" to="#">
                         <i class="bi bi-person-fill"></i>
                         <p>Akun</p>
-                    </a>
+                    </router-link>
                 </li>
             </ul>
         </div>
     </div>
 </template>
+
+<script>
+export default {
+    methods: {
+        isActive(route) {
+            return this.$route.path === route;
+        }
+    }
+}
+</script>

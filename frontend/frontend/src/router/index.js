@@ -1,11 +1,24 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import DashboardView from '@/views/DashboardView.vue'
+import PerbaikanTas from '@/views/PerbaikanTas.vue'
+import Material from '@/views/MaterialView.vue'
 
 const routes = [
   {
     path: '/',
     name: 'dashboard',
-    component: DashboardView
+    component: DashboardView,
+    alias: '/dashboard'
+  },
+  {
+    path: '/perbaikantas',
+    name: 'perbaikantas',
+    component: PerbaikanTas
+  },
+  {
+    path: '/material',
+    name: 'material',
+    component: Material
   },
   {
     path: '/about',
