@@ -1800,12 +1800,13 @@ fieldset[disabled] .form-control {
     border-bottom-width: 1px;
     font-size: 12px;
     text-transform: uppercase;
-    color: #9A9A9A;
-    font-weight: 400;
+    color: #000000;
+    font-weight: bold;
     padding-bottom: 5px;
     border-top: none !important;
     border-bottom: none;
     text-align: left !important;
+    background-color: #d5d5d5;
 }
 
 .table .td-actions .btn {
@@ -2962,7 +2963,7 @@ Copyright (c) 2015 Daniel Eden
 .card .table tbody td:last-child,
 .card .table thead th:last-child {
     padding-right: 15px;
-    display: inline-flex;
+    /* display: inline-flex; // berfungsi agar kolom terakhir tetap dalam 1 baris yang sama*/ 
 }
 
 .card .alert {

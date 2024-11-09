@@ -76,17 +76,14 @@ export default {
           console.log('Error fetching data:', error);
         });
     },
-    viewDetail(index) {
-      console.log("Lihat detail item ke-", index);
-    },
-    editItem(index) {
-      console.log("Edit item ke-", index);
-    },
-    deleteItem(index) {
-      console.log("Hapus item ke-", index);
-      // Menghapus item dari array bahan (jika diperlukan)
-      this.bahan.splice(index, 1);
-    }
+    // editItem(index) {
+    //   console.log("Edit item ke-", index);
+    // },
+    // deleteItem(index) {
+    //   console.log("Hapus item ke-", index);
+    //   // Menghapus item dari array bahan (jika diperlukan)
+    //   this.bahan.splice(index, 1);
+    // }
   }
 };
 </script>

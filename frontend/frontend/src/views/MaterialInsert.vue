@@ -1,93 +1,140 @@
 <template>
   <div class="content">
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-md-12">
-          <div class="card strpied-tabled-with-hover">
-            <div class="card-header">
-              <h4 class="card-title">Data Material</h4>
-            </div>
-            <div class="card-body table-full-width table-responsive">
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th>No</th>
-                    <th>Bahan</th>
-                    <th>Harga Persatuan</th>
-                    <th>Jumlah</th>
-                    <th>Satuan</th>
-                    <th>Pemasok</th>
-                    <th>Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(bahan, index) in bahan" :key="bahan.bahan_id">
-                    <td>{{ index + 1 }}</td> <!-- Menampilkan nomor urut -->
-                    <td>{{ bahan.nama_bahan }}</td>
-                    <td>{{ bahan.harga_satuan }}</td>
-                    <td>{{ bahan.stok }}</td>
-                    <td>{{ bahan.satuan }}</td>
-                    <td>{{ bahan.pemasok_id }}</td>
-                    <td>
-                      <button class="btn btn-primary btn-fill action-button" style="margin-right: 10px;" @click="viewDetail(index)">Detail</button>
-                      <button class="btn btn-warning btn-fill action-button" @click="editItem(index)">Edit</button>
-                      <button class="btn btn-danger btn-fill action-button" @click="deleteItem(index)">Hapus</button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+      <div class="container-fluid">
+          <div class="row">
+              <div class="card" style="width: 80%;">
+                  <div class="card-header">
+                      <h4 class="card-title">Perbaikan Baru</h4>
+                  </div>
+                  <div class="card-body">
+                      <form @submit.prevent="handleSubmit">
+                          <div class="row">
+                              <div class="col-md-2 pr-1">
+                                  <div class="form-group">
+                                      <label>Nama Pelanggan</label>
+                                  </div>
+                              </div>
+                              <div class="col-md-10">
+                                  <div class="form-group">
+                                      <select class="form-control" v-model="customerName" required>
+                                          <option selected>Choose...</option>
+                                          <option>...</option>
+                                      </select>
+                                  </div>
+                              </div>
+                          </div>
+                          <div class="row">
+                              <div class="col-md-2 pr-1">
+                                  <div class="form-group">
+                                      <label>Jenis Perbaikan</label>
+                                  </div>
+                              </div>
+                              <div class="col-md-10">
+                                  <div class="form-group">
+                                      <select class="form-control" v-model="jenisPerbaikan" required>
+                                          <option selected>Choose...</option>
+                                          <option>...</option>
+                                      </select>
+                                  </div>
+                              </div>
+                          </div>
+                          <div class="row">
+                              <div class="col-md-2 pr-1">
+                                  <div class="form-group">
+                                      <label for="tanggal">Tanggal Masuk</label>
+                                  </div>
+                              </div>
+                              <div class="col-md-10">
+                                  <div class="form-group">
+                                      <input type="date" id="tanggalMasuk" v-model="tanggal">
+                                  </div>
+                              </div>
+                          </div>
+                          <div class="row">
+                              <div class="col-md-2 pr-1">
+                                  <div class="form-group">
+                                      <label for="tanggal">Tanggal Keluar</label>
+                                  </div>
+                              </div>
+                              <div class="col-md-10">
+                                  <div class="form-group">
+                                      <input type="date" id="tanggalKeluar" v-model="tanggal">
+                                  </div>
+                              </div>
+                          </div>
+                          <div class="row">
+                              <div class="col-md-2 pr-1">
+                                  <div class="form-group">
+                                      <label>Biaya Perbaikan</label>
+                                  </div>
+                              </div>
+                              <div class="col-md-10">
+                                  <div class="form-group">
+                                      <input type="text" class="form-control">
+                                  </div>
+                              </div>
+                          </div>
+                          <div class="row">
+                              <div class="col-md-2 pr-1">
+                                  <div class="form-group">
+                                      <label>Status Pembayaran</label>
+                                  </div>
+                              </div>
+                              <div class="col-md-10">
+                                  <div class="form-group">
+                                      <div>
+                                          <label style="margin-right: 20px;">
+                                              <input type="radio" v-model="statusPembayaran" value="lunas" required>
+                                              Belum Bayar
+                                          </label>
+                                          <label>
+                                              <input type="radio" v-model="statusPembayaran" value="belum-lunas"
+                                                  required>
+                                              Sudah Bayar
+                                          </label>
+                                      </div>
+
+                                  </div>
+                              </div>
+                          </div>
+                          <button type="submit" class="btn btn-info btn-fill pull-right">Update Profile</button>
+                          <div class="clearfix"></div>
+                      </form>
+                  </div>
+              </div>
           </div>
-        </div>
       </div>
-    </div>
   </div>
 </template>
 
-<style scoped>
-  .action-button {
-    margin-right: 10px;
-  }
-</style>
-
 <script>
-import axios from 'axios';
-
 export default {
   data() {
-    return {
-      api: 'http://localhost:50/bahan', // Endpoint API
-      bahan: [], // Menyimpan data bahan dalam bentuk array
-    };
+      return {
+          customerName: '',
+          jenisPerbaikan: '',
+          tanggalMasuk: '',
+          tanggalKeluar: '',
+          statusPembayaran: ''
+      };
   },
-
-  mounted() {
-    // Memanggil metode getBahan saat komponen dimuat
-    this.getBahan();
-  },
-
   methods: {
-    getBahan() {
-      axios.get(this.api)
-        .then(response => {
-          console.log(response.data); // Log data API untuk debugging
-          this.bahan = response.data; // Menyimpan data bahan dari API
-        })
-        .catch(error => {
-          console.log('Error fetching data:', error);
-        });
-    },
-    viewDetail(index) {
-      console.log("Lihat detail item ke-", index);
-    },
-    editItem(index) {
-      console.log("Edit item ke-", index);
-    },
-    deleteItem(index) {
-      console.log("Hapus item ke-", index);
-      // Menghapus item dari array bahan (jika diperlukan)
-      this.bahan.splice(index, 1);
-    }
+      handleSubmit() {
+          if (this.customerName && this.jenisPerbaikan && this.statusPembayaran) {
+              console.log('Form dikirim:', {
+                  customerName: this.customerName,
+                  jenisPerbaikan: this.jenisPerbaikan,
+                  statusPembayaran: this.statusPembayaran // Menambahkan status pembayaran
+              });
+              // Reset form atau melakukan tindakan lain
+              this.customerName = '';
+              this.jenisPerbaikan = '';
+              this.statusPembayaran = ''; // Reset status pembayaran
+          } else {
+              alert('Silakan isi semua kolom yang wajib.');
+          }
+      }
+
   }
-};
+}
 </script>
