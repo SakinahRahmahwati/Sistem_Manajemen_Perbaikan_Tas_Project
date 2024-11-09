@@ -27,8 +27,9 @@
                     <td>{{ bahan.harga_satuan }}</td>
                     <td>{{ bahan.stok }}</td>
                     <td>{{ bahan.satuan }}</td>
-                    <td>{{ bahan.nama_pemasok }}</td>
+                    <td>{{ bahan.pemasok_id }}</td>
                     <td>
+                      <button class="btn btn-primary btn-fill action-button" style="margin-right: 10px;" @click="viewDetail(index)">Detail</button>
                       <button class="btn btn-warning btn-fill action-button" @click="editItem(index)">Edit</button>
                       <button class="btn btn-danger btn-fill action-button" @click="deleteItem(index)">Hapus</button>
                     </td>
