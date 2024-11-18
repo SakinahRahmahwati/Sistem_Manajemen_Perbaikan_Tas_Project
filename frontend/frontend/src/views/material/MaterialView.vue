@@ -1,6 +1,8 @@
 <template>
   <div class="content">
     <div class="container-fluid">
+      <button class="btn btn-primary btn-fill action-button" @click="onSubmit" style="margin-bottom: 16px;">+ Insert
+        Data</button>
       <div class="row">
         <div class="col-md-12">
           <div class="card strpied-tabled-with-hover">

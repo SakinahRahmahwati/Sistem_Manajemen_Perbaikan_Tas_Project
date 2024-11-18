@@ -1,6 +1,8 @@
 <template>
   <div class="content">
     <div class="container-fluid">
+      <button class="btn btn-primary btn-fill action-button" @click="onSubmit" style="margin-bottom: 16px;">+ Insert
+        Data</button>
       <div class="row">
         <div class="col-md-12">
           <div class="card strpied-tabled-with-hover">
@@ -27,10 +29,10 @@
                     <td>{{ pemasok.email }}</td>
                     <td>{{ pemasok.telepon }}</td>
                     <td>
-                      <button class="btn btn-primary btn-fill action-button" style="margin-right: 10px;"
-                        @click="detailItem(index)">Detail</button>
-                      <button class="btn btn-warning btn-fill action-button" @click="editItem(index)">Edit</button>
-                      <button class="btn btn-danger btn-fill action-button" @click="deleteItem(index)">Hapus</button>
+                      <!-- <button class="btn btn-primary btn-fill action-button" style="margin-right: 10px;"
+                        @click="detailItem(index)">Detail</button> -->
+                      <button class="btn btn-warning btn-fill action-button" @click="onUpdate(pemasok.pemasok_id)">Edit</button>
+                      <button class="btn btn-danger btn-fill action-button" @click="onDelete(index)">Hapus</button>
                     </td>
                   </tr>
                 </tbody>
@@ -40,6 +42,7 @@
         </div>
       </div>
     </div>
+    <router-view></router-view>
   </div>
 </template>
 
@@ -55,7 +58,7 @@ import axios from 'axios';
 export default {
   data() {
     return {
-      api: 'http://localhost:50/pemasok', // Endpoint API
+      api: 'http://localhost:50/daftarpemasok', // Endpoint API
       pemasok: [], // Menyimpan data bahan dalam bentuk array
     };
   },
@@ -80,16 +83,35 @@ export default {
     //   // Logika untuk menampilkan detail item
     //   console.log("Lihat detail item ke-", index);
     // },
-    // editItem(index) {
-    //   // Logika untuk mengedit item
-    //   console.log("Edit item ke-", index);
-    // },
-    // deleteItem(index) {
-    //   // Logika untuk menghapus item
-    //   console.log("Hapus item ke-", index);
-    //   // Contoh menghapus item dari array
-    //   this.tableData.splice(index, 1);
-    // }
+    onUpdate(pemasok_id) {
+      // Logika untuk mengedit item
+      this.$router.push({ name: 'pemasokUpdate', params: { id: pemasok_id } });
+    },
+    onDelete(index) {
+      const pemasok_id = this.pemasok[index].pemasok_id;
+
+      // Menampilkan konfirmasi peringatan
+      const isConfirmed = window.confirm("Apakah Anda yakin ingin menghapus data pemasok ini?");
+
+      if (isConfirmed) {
+        // Jika pengguna mengkonfirmasi, lanjutkan dengan penghapusan
+        axios.delete(`http://localhost:50/pemasok?id=${pemasok_id}`)
+          .then(response => {
+            console.log(response.data); // Menampilkan pesan sukses
+            // Menghapus item yang telah dihapus dari array lokal
+            this.pemasok.splice(index, 1);
+            alert("Data pemasok berhasil dihapus!");
+          })
+          .catch(error => {
+            console.log('Error deleting data:', error);
+          });
+      } else {
+        console.log('Penghapusan dibatalkan');
+      }
+    },
+    onSubmit() {
+      this.$router.push('/pemasok/insert');
+    }
   }
 };
 </script>

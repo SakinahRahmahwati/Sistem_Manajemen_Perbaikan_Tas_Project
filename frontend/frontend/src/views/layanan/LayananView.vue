@@ -1,6 +1,8 @@
 <template>
   <div class="content">
     <div class="container-fluid">
+      <button class="btn btn-primary btn-fill action-button" @click="onSubmit" style="margin-bottom: 16px;">+ Insert
+        Data</button>
       <div class="row">
         <div class="col-md-12">
           <div class="card strpied-tabled-with-hover">
@@ -29,7 +31,7 @@
                     <td>{{ layanan.waktu_estimasi }}</td>
                     <td>{{ layanan.deskripsi.length > 50 ? layanan.deskripsi.substring(0, 50) + '...' : layanan.deskripsi }}</td>
                     <td>
-                      <button class="btn btn-primary btn-fill action-button" style="margin-right: 10px;" @click="detailItem(index)">Detail</button>
+                      <!-- <button class="btn btn-primary btn-fill action-button" style="margin-right: 10px;" @click="detailItem(index)">Detail</button> -->
                       <button class="btn btn-warning btn-fill action-button" @click="editItem(index)">Edit</button>
                       <button class="btn btn-danger btn-fill action-button" @click="deleteItem(index)">Hapus</button>
                     </td>

@@ -27,7 +27,7 @@
                       <td>{{ item.pelanggan }}</td>
                       <td>{{ item.harga }}</td>
                       <td>
-                        <button class="btn btn-primary btn-fill action-button" style="margin-right: 10px;" @click="detailItem(index)">Detail</button>
+                        <!-- <button class="btn btn-primary btn-fill action-button" style="margin-right: 10px;" @click="detailItem(index)">Detail</button> -->
                         <button class="btn btn-warning btn-fill action-button" @click="editItem(index)">Edit</button>
                         <button class="btn btn-danger btn-fill action-button" @click="deleteItem(index)">Hapus</button>
                       </td>

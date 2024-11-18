@@ -36,19 +36,19 @@
                         <p>Material</p>
                     </router-link>
                 </li>
-                <li class="nav-item" :class="{ active: isActive('') }">
+                <li class="nav-item" :class="{ active: isActive('/pelanggan') || isActive('/pelanggan/insert') || isActive('/pelanggan/update')}">
                     <router-link class="nav-link" to="/pelanggan">
                         <i class="bi bi-people-fill"></i>
                         <p>Pelanggan</p>
                     </router-link>
                 </li>
-                <li class="nav-item" :class="{ active: isActive('') }">
+                <li class="nav-item" :class="{ active: isActive('/pemasok') || isActive('/pemasok/insert') }">
                     <router-link class="nav-link" to="/pemasok">
                         <i class="bi bi-boxes"></i>
                         <p>Pemasok</p>
                     </router-link>
                 </li>
-                <li class="nav-item" :class="{ active: isActive('') }">
+                <li class="nav-item" :class="{ active: isActive('/laporankeuangan') }">
                     <router-link class="nav-link" to="/laporankeuangan">
                         <i class="bi bi-cash-coin"></i>
                         <p>Laporan Keuangan</p>
