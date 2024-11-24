@@ -3,6 +3,8 @@ import Login from '@/views/LoginView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import PerbaikanTas from '@/views/perbaikan/PerbaikanTas.vue'
 import Material from '@/views/material/MaterialView.vue'
+import MaterialInsert from '@/views/material/MaterialInsert.vue'
+import MaterialUpdate from '@/views/material/MaterialUpdate.vue'
 import Pelanggan from '@/views/pelanggan/PelangganView.vue'
 import PelangganInsert from '@/views/pelanggan/PelangganInsert.vue'
 import PelangganUpdate from '@/views/pelanggan/PelangganUpdate.vue'
@@ -11,6 +13,8 @@ import PemasokInsert from '@/views/pemasok/PemasokInsert.vue'
 import PemasokUpdate from '@/views/pemasok/PemasokUpdate.vue'
 import Laporan from '@/views/laporankeuangan/LaporanKeuangan.vue'
 import Layanan from '@/views/layanan/LayananView.vue'
+import LayananInsert from '@/views/layanan/LayananInsert.vue'
+import LayananUpdate from '@/views/layanan/LayananUpdate.vue'
 
 const routes = [
   {
@@ -33,6 +37,16 @@ const routes = [
     path: '/material',
     name: 'material',
     component: Material
+  },
+  {
+    path: '/material/insert',
+    name: 'materialInsert',
+    component: MaterialInsert
+  },
+  {
+    path: '/material/:id/edit',
+    name: 'materialUpdate',
+    component: MaterialUpdate
   },
   {
     path: '/pelanggan',
@@ -73,6 +87,16 @@ const routes = [
     path: '/jenislayanan',
     name: 'layanan',
     component: Layanan
+  },
+  {
+    path: '/jenislayanan/insert',
+    name: 'layananInsert',
+    component: LayananInsert
+  },
+  {
+    path: '/jenislayanan/:id/edit',
+    name: 'layananUpdate',
+    component: LayananUpdate
   },
   {
     path: '/about',

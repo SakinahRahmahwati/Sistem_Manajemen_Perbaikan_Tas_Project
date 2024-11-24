@@ -4,21 +4,21 @@
             <div class="row">
                 <div class="card" style="width: 80%;">
                     <div class="card-header">
-                        <h4 class="card-title">Material Baru</h4>
+                        <h4 class="card-title">Edit Material</h4>
                     </div>
                     <div class="card-body">
-                        <form @submit.prevent="onSubmit">
+                        <form @submit.prevent="onUpdate">
                             <!-- Nama -->
                             <div class="row">
                                 <div class="col-md-2 pr-1">
                                     <div class="form-group">
-                                        <label for="namaBahan">Nama Bahan</label>
+                                        <label for="edit_namaBahan">Edit Nama Bahan</label>
                                     </div>
                                 </div>
                                 <div class="col-md-10">
                                     <div class="form-group">
-                                        <input type="text" class="form-control" id="namaBahan" v-model="namaBahan"
-                                            required>
+                                        <input type="text" class="form-control" id="edit_namaBahan"
+                                            v-model="edit_namaBahan" required>
                                     </div>
                                 </div>
                             </div>
@@ -27,41 +27,43 @@
                             <div class="row">
                                 <div class="col-md-2 pr-1">
                                     <div class="form-group">
-                                        <label for="hargaBahan">Harga Satuan</label>
+                                        <label for="edit_hargaBahan">Edit Harga Satuan</label>
                                     </div>
                                 </div>
                                 <div class="col-md-10">
                                     <div class="form-group">
-                                        <input type="number" class="form-control" id="hargaBahan" v-model="hargaBahan"
+                                        <input type="number" class="form-control" id="edit_hargaBahan"
+                                            v-model="edit_hargaBahan" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- edit_Stok -->
+                            <div class="row">
+                                <div class="col-md-2 pr-1">
+                                    <div class="form-group">
+                                        <label for="edit_stok">Edit Jumlah Stok</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-10">
+                                    <div class="form-group">
+                                        <input type="number" class="form-control" id="edit_stok" v-model="edit_stok"
                                             required>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Stok -->
+                            <!-- edit_Satuan -->
                             <div class="row">
                                 <div class="col-md-2 pr-1">
                                     <div class="form-group">
-                                        <label for="stok">Jumlah Stok</label>
+                                        <label for="edit_satuan">Edit Satuan</label>
                                     </div>
                                 </div>
                                 <div class="col-md-10">
                                     <div class="form-group">
-                                        <input type="number" class="form-control" id="stok" v-model="stok" required>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Satuan -->
-                            <div class="row">
-                                <div class="col-md-2 pr-1">
-                                    <div class="form-group">
-                                        <label for="satuan">Satuan</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-10">
-                                    <div class="form-group">
-                                        <input type="text" class="form-control" id="satuan" v-model="satuan" required>
+                                        <input type="text" class="form-control" id="edit_satuan" v-model="edit_satuan"
+                                            required>
                                     </div>
                                 </div>
                             </div>
@@ -70,12 +72,13 @@
                             <div class="row">
                                 <div class="col-md-2 pr-1">
                                     <div class="form-group">
-                                        <label for="namaPemasok">Nama Pemasok</label>
+                                        <label for="edit_namaPemasok">Edit Nama Pemasok</label>
                                     </div>
                                 </div>
                                 <div class="col-md-10">
                                     <div class="form-group">
-                                        <select class="form-control" id="namaPemasok" v-model="namaPemasok" required>
+                                        <select class="form-control" id="edit_namaPemasok" v-model="edit_namaPemasok"
+                                            required>
                                             <option value="" disabled>Pilih Pemasok</option>
                                             <option v-for="pemasok in daftarPemasok" :key="pemasok.pemasok_id"
                                                 :value="pemasok.pemasok_id">
@@ -90,12 +93,12 @@
                             <div class="row">
                                 <div class="col-md-2 pr-1">
                                     <div class="form-group">
-                                        <label for="tanggalMasuk">Tanggal Masuk</label>
+                                        <label for="edit_tanggalMasuk">Edit Tanggal Masuk</label>
                                     </div>
                                 </div>
                                 <div class="col-md-10">
                                     <div class="form-group">
-                                        <input type="date" id="tanggalMasuk" v-model="tanggalMasuk" required>
+                                        <input type="date" id="edit_tanggalMasuk" v-model="edit_tanggalMasuk" required>
                                     </div>
                                 </div>
                             </div>
@@ -116,21 +119,42 @@ import axios from 'axios';
 export default {
     data() {
         return {
-            namaBahan: '',
-            hargaBahan: '',
-            stok: '',
-            satuan: '',
-            namaPemasok: '',
-            tanggalMasuk: '',
+            edit_namaBahan: '',
+            edit_hargaBahan: '',
+            edit_stok: '',
+            edit_satuan: '',
+            edit_namaPemasok: '',
+            edit_tanggalMasuk: '',
             daftarPemasok: []
         };
     },
 
     mounted() {
         this.getPemasok();
+        const bahan_id = this.$route.params.id;
+        this.getBahan(bahan_id);
     },
 
     methods: {
+        getBahan(id) {
+            axios.get(`http://localhost:50/bahan?id=${id}`)
+                .then(response => {
+                    // console.log('Response:', response);
+                    const bahan = response.data[0];
+                    this.edit_namaBahan = bahan.nama_bahan;
+                    this.edit_hargaBahan = bahan.harga_satuan;
+                    this.edit_stok = parseInt(bahan.stok, 10);
+                    this.edit_satuan = bahan.satuan;
+                    this.edit_namaPemasok = bahan.pemasok_id;
+
+                    const date = new Date(bahan.tanggal_masuk);
+                    const formattedDate = date.toISOString().split('T')[0]; // Format YYYY-MM-DD
+                    this.edit_tanggalMasuk = formattedDate;
+                })
+                .catch(error => {
+                    console.error('Error fetching pelanggan data:', error);
+                });
+        },
         getPemasok() {
             axios.get("http://localhost:50/daftarpemasok")
                 .then(response => {
@@ -141,40 +165,32 @@ export default {
                     console.error("Terjadi kesalahan saat mengambil data pemasok:", error);
                 });
         },
-        onSubmit() {
-            const harga = parseFloat(this.hargaBahan);
-            const stokValue = parseInt(this.stok, 10);
 
-            if (this.namaBahan.trim() && !isNaN(harga) && !isNaN(stokValue) && this.satuan.trim() && this.namaPemasok && this.tanggalMasuk) {
-                const dataToSend = {
-                    nama_bahan: this.namaBahan,
-                    harga_satuan: this.hargaBahan,
-                    stok: this.stok,
-                    satuan: this.satuan,
-                    pemasok_id: this.namaPemasok, // Kirim ID pemasok
-                    tanggal_masuk: this.tanggalMasuk,
-                };
+        onUpdate() {
+            const bahan_id = this.$route.params.id; // Mendapatkan ID dari URL
+            const updatedData = {
+                nama_bahan: this.edit_namaBahan,
+                harga_satuan: this.edit_hargaBahan,
+                stok: parseInt(this.edit_stok, 10),
+                satuan: this.edit_satuan,
+                pemasok_id: this.edit_namaPemasok,
+                tanggal_masuk: this.edit_tanggalMasuk,
+            };
 
-                axios.post('http://localhost:50/daftarbahan', dataToSend)
-                    .then(response => {
-                        console.log('Data berhasil dikirim:', response.data);
-                        // Reset form atau lakukan tindakan lain setelah sukses
-                        alert('Data berhasil ditambahkan!');
-                        // Reset form atau melakukan tindakan lainnya
-                        this.namaBahan = '';
-                        this.hargaBahan = '';
-                        this.stok = '';
-                        this.satuan = '';
-                        this.namaPemasok = '';
-                        this.tanggalMasuk = '';
-                        this.$router.push({ name: 'material' });
-                    })
-                    .catch(error => {
-                        console.error('Terjadi kesalahan saat mengirim data:', error);
-                    });
-            } else {
-                alert('Silakan isi semua kolom yang wajib.');
-            }
+            axios.put(`http://localhost:50/bahan?id=${bahan_id}`, updatedData, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => {
+                    alert('Data berhasil diperbarui!', response.data);
+                    this.$router.push({ name: 'material' });
+                    // Redirect atau lakukan tindakan lain setelah pembaruan
+                })
+                .catch(error => {
+                    console.error('Terjadi kesalahan saat memperbarui data:', error);
+                    alert('Terjadi kesalahan saat memperbarui data. Silakan coba lagi.');
+                });
         }
     }
 }

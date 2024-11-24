@@ -29,16 +29,31 @@
                     <td>{{ layanan.nama_bahan }}</td>
                     <td>{{ layanan.harga }}</td>
                     <td>{{ layanan.waktu_estimasi }}</td>
-                    <td>{{ layanan.deskripsi.length > 50 ? layanan.deskripsi.substring(0, 50) + '...' : layanan.deskripsi }}</td>
+                    <td>{{ layanan.deskripsi.length > 50 ? layanan.deskripsi.substring(0, 50) + '...' :
+                      layanan.deskripsi }}</td>
                     <td>
                       <!-- <button class="btn btn-primary btn-fill action-button" style="margin-right: 10px;" @click="detailItem(index)">Detail</button> -->
-                      <button class="btn btn-warning btn-fill action-button" @click="editItem(index)">Edit</button>
-                      <button class="btn btn-danger btn-fill action-button" @click="deleteItem(index)">Hapus</button>
+                      <button class="btn btn-warning btn-fill action-button" @click="onUpdate(layanan.layanan_id)">Edit</button>
+                      <button class="btn btn-danger btn-fill action-button" @click="onDelete(index)">Hapus</button>
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
+            <!-- Paginasi -->
+            <nav aria-label="Table Pagination">
+              <ul class="pagination">
+                <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                  <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Previous</a>
+                </li>
+                <li class="page-item" :class="{ active: page === currentPage }" v-for="page in totalPages" :key="page">
+                  <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
+                </li>
+                <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                  <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">Next</a>
+                </li>
+              </ul>
+            </nav>
           </div>
         </div>
       </div>
@@ -47,6 +62,16 @@
 </template>
 
 <style scoped>
+.pagination {
+  justify-content: right;
+  margin-top: 15px;
+  margin-right: 10px;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
 .action-button {
   margin-right: 10px;
 }
@@ -58,9 +83,24 @@ import axios from 'axios';
 export default {
   data() {
     return {
-      api: 'http://localhost:50/layanan', // Endpoint API
+      api: 'http://localhost:50/daftarlayanan', // Endpoint API
       layanan: [], // Menyimpan data bahan dalam bentuk array
+      currentPage: 1,
+      itemsPerPage: 10,
     };
+  },
+
+  computed: {
+    totalPages() {
+      // Menghitung total halaman
+      return Math.ceil(this.layanan.length / this.itemsPerPage);
+    },
+    paginatedLayanan() {
+      // Mengambil data untuk halaman saat ini
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return this.layanan.slice(start, end);
+    },
   },
 
   mounted() {
@@ -79,16 +119,30 @@ export default {
           console.log('Error fetching data:', error);
         });
     },
-    // editItem(index) {
-    //   // Logika untuk mengedit item
-    //   console.log("Edit item ke-", index);
-    // },
-    // deleteItem(index) {
-    //   // Logika untuk menghapus item
-    //   console.log("Hapus item ke-", index);
-    //   // Contoh menghapus item dari array
-    //   this.tableData.splice(index, 1);
-    // }
+    onSubmit() {
+      this.$router.push('/jenislayanan/insert');
+    },
+    onUpdate(layanan_id) {
+      this.$router.push({ name: 'layananUpdate', params: { id: layanan_id } });
+    },
+    onDelete(index) {
+      const layanan_id = this.layanan[index].layanan_id;
+      const isConfirmed = window.confirm("Apakah Anda yakin ingin menghapus data layanan ini?");
+
+      if (isConfirmed) {
+        axios.delete(`http://localhost:50/layanan?id=${layanan_id}`)
+          .then(response => {
+            console.log(response.data);
+            this.layanan.splice(index, 1);
+            alert("Data layanan berhasil dihapus!");
+          })
+          .catch(error => {
+            console.log('Error deleting data:', error);
+          });
+      } else {
+        console.log('Penghapusan dibatalkan');
+      }
+    },
   }
 };
 </script>

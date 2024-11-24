@@ -7,8 +7,8 @@
      -->
         <div class="sidebar-wrapper">
             <div class="logo">
-                <router-link to="" class="simple-text">
-                    Dian Tas
+                <router-link to="/" class="simple-text">
+                    <img :src="require('@/assets/logo.png')" alt="Logo" width="80" />
                 </router-link>
             </div>
             <ul class="nav">
@@ -36,7 +36,8 @@
                         <p>Material</p>
                     </router-link>
                 </li>
-                <li class="nav-item" :class="{ active: isActive('/pelanggan') || isActive('/pelanggan/insert') || isActive('/pelanggan/update')}">
+                <li class="nav-item"
+                    :class="{ active: isActive('/pelanggan') || isActive('/pelanggan/insert') || isActive('/pelanggan/update') }">
                     <router-link class="nav-link" to="/pelanggan">
                         <i class="bi bi-people-fill"></i>
                         <p>Pelanggan</p>

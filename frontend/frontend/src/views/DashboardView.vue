@@ -2,7 +2,7 @@
     <div class="content">
         <div class="container-fluid">
             <div class="row">
-                <!-- <div class="col-md-4">
+                <div class="col-md-4">
                     <div class="card ">
                         <div class="card-header ">
                             <h4 class="card-title">Email Statistics</h4>
@@ -43,10 +43,10 @@
                             </div>
                         </div>
                     </div>
-                </div> -->
+                </div>
             </div>
             <div class="row">
-                <!-- <div class="col-md-6">
+                <div class="col-md-6">
                     <div class="card ">
                         <div class="card-header ">
                             <h4 class="card-title">2017 Sales</h4>
@@ -219,7 +219,7 @@
                             </div>
                         </div>
                     </div>
-                </div> -->
+                </div>
             </div>
         </div>
     </div>

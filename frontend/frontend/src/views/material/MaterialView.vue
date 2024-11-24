@@ -16,9 +16,10 @@
                     <th>No</th>
                     <th>Bahan</th>
                     <th>Harga Persatuan</th>
-                    <th>Jumlah</th>
+                    <th>Stok</th>
                     <th>Satuan</th>
                     <th>Pemasok</th>
+                    <th>Tanggal Masuk</th>
                     <th>Aksi</th>
                   </tr>
                 </thead>
@@ -30,14 +31,29 @@
                     <td>{{ bahan.stok }}</td>
                     <td>{{ bahan.satuan }}</td>
                     <td>{{ bahan.nama_pemasok }}</td>
+                    <td>{{ bahan.tanggal_masuk }}</td>
                     <td>
-                      <button class="btn btn-warning btn-fill action-button" @click="editItem(index)">Edit</button>
-                      <button class="btn btn-danger btn-fill action-button" @click="deleteItem(index)">Hapus</button>
+                      <button class="btn btn-warning btn-fill action-button" @click="onUpdate(bahan.bahan_id)">Edit</button>
+                      <button class="btn btn-danger btn-fill action-button" @click="onDelete(index)">Hapus</button>
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
+            <!-- Paginasi -->
+            <nav aria-label="Table Pagination">
+              <ul class="pagination">
+                <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                  <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Previous</a>
+                </li>
+                <li class="page-item" :class="{ active: page === currentPage }" v-for="page in totalPages" :key="page">
+                  <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
+                </li>
+                <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                  <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">Next</a>
+                </li>
+              </ul>
+            </nav>
           </div>
         </div>
       </div>
@@ -46,9 +62,19 @@
 </template>
 
 <style scoped>
-  .action-button {
-    margin-right: 10px;
-  }
+.pagination {
+  justify-content: right;
+  margin-top: 15px;
+  margin-right: 10px;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+.action-button {
+  margin-right: 10px;
+}
 </style>
 
 <script>
@@ -57,9 +83,24 @@ import axios from 'axios';
 export default {
   data() {
     return {
-      api: 'http://localhost:50/bahan', // Endpoint API
+      api: 'http://localhost:50/daftarbahan', // Endpoint API
       bahan: [], // Menyimpan data bahan dalam bentuk array
+      currentPage: 1, // Halaman saat ini
+      itemsPerPage: 10, // Jumlah item per halaman
     };
+  },
+
+  computed: {
+    totalPages() {
+      // Menghitung total halaman
+      return Math.ceil(this.bahan.length / this.itemsPerPage);
+    },
+    paginatedBahan() {
+      // Mengambil data untuk halaman saat ini
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return this.bahan.slice(start, end);
+    },
   },
 
   mounted() {
@@ -78,14 +119,36 @@ export default {
           console.log('Error fetching data:', error);
         });
     },
-    // editItem(index) {
-    //   console.log("Edit item ke-", index);
-    // },
-    // deleteItem(index) {
-    //   console.log("Hapus item ke-", index);
-    //   // Menghapus item dari array bahan (jika diperlukan)
-    //   this.bahan.splice(index, 1);
-    // }
+    onSubmit() {
+      this.$router.push('/material/insert');
+    },
+    onUpdate(bahan_id) {
+      // Logika untuk mengedit item
+      this.$router.push({ name: 'materialUpdate', params: { id: bahan_id } });
+    },
+    onDelete(index) {
+      const bahan_id = this.bahan[index].bahan_id;
+
+      // Menampilkan konfirmasi peringatan
+      const isConfirmed = window.confirm("Apakah Anda yakin ingin menghapus data bahan ini?");
+
+      if (isConfirmed) {
+        // Jika pengguna mengkonfirmasi, lanjutkan dengan penghapusan
+        axios.delete(`http://localhost:50/bahan?id=${bahan_id}`)
+          .then(response => {
+            console.log(response.data); // Menampilkan pesan sukses
+            // Menghapus item yang telah dihapus dari array lokal
+            this.bahan.splice(index, 1);
+            alert("Data bahan berhasil dihapus!");
+          })
+          .catch(error => {
+            console.log('Error deleting data:', error);
+          });
+      } else {
+        console.log('Penghapusan dibatalkan');
+      }
+    },
   }
+
 };
 </script>

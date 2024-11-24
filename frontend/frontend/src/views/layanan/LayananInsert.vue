@@ -4,11 +4,26 @@
             <div class="row">
                 <div class="card" style="width: 80%;">
                     <div class="card-header">
-                        <h4 class="card-title">Material Baru</h4>
+                        <h4 class="card-title">Layanan Baru</h4>
                     </div>
                     <div class="card-body">
                         <form @submit.prevent="onSubmit">
                             <!-- Nama -->
+                            <div class="row">
+                                <div class="col-md-2 pr-1">
+                                    <div class="form-group">
+                                        <label for="namaLayanan">Nama Layanan</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-10">
+                                    <div class="form-group">
+                                        <input type="text" class="form-control" id="namaLayanan" v-model="namaLayanan"
+                                            required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bahan -->
                             <div class="row">
                                 <div class="col-md-2 pr-1">
                                     <div class="form-group">
@@ -17,85 +32,58 @@
                                 </div>
                                 <div class="col-md-10">
                                     <div class="form-group">
-                                        <input type="text" class="form-control" id="namaBahan" v-model="namaBahan"
-                                            required>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Harga -->
-                            <div class="row">
-                                <div class="col-md-2 pr-1">
-                                    <div class="form-group">
-                                        <label for="hargaBahan">Harga Satuan</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-10">
-                                    <div class="form-group">
-                                        <input type="number" class="form-control" id="hargaBahan" v-model="hargaBahan"
-                                            required>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Stok -->
-                            <div class="row">
-                                <div class="col-md-2 pr-1">
-                                    <div class="form-group">
-                                        <label for="stok">Jumlah Stok</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-10">
-                                    <div class="form-group">
-                                        <input type="number" class="form-control" id="stok" v-model="stok" required>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Satuan -->
-                            <div class="row">
-                                <div class="col-md-2 pr-1">
-                                    <div class="form-group">
-                                        <label for="satuan">Satuan</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-10">
-                                    <div class="form-group">
-                                        <input type="text" class="form-control" id="satuan" v-model="satuan" required>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Pemasok -->
-                            <div class="row">
-                                <div class="col-md-2 pr-1">
-                                    <div class="form-group">
-                                        <label for="namaPemasok">Nama Pemasok</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-10">
-                                    <div class="form-group">
-                                        <select class="form-control" id="namaPemasok" v-model="namaPemasok" required>
-                                            <option value="" disabled>Pilih Pemasok</option>
-                                            <option v-for="pemasok in daftarPemasok" :key="pemasok.pemasok_id"
-                                                :value="pemasok.pemasok_id">
-                                                {{ pemasok.nama_pemasok }}
+                                        <select class="form-control" id="namaBahan" v-model="namaBahan" required>
+                                            <option value="" disabled>Pilih Bahan</option>
+                                            <option v-for="bahan in daftarBahan" :key="bahan.bahan_id"
+                                                :value="bahan.bahan_id">
+                                                {{ bahan.nama_bahan }}
                                             </option>
                                         </select>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- tanggal masuk -->
+                            <!-- Harga Layanan -->
                             <div class="row">
                                 <div class="col-md-2 pr-1">
                                     <div class="form-group">
-                                        <label for="tanggalMasuk">Tanggal Masuk</label>
+                                        <label for="hargaLayanan">Harga Layanan</label>
                                     </div>
                                 </div>
                                 <div class="col-md-10">
                                     <div class="form-group">
-                                        <input type="date" id="tanggalMasuk" v-model="tanggalMasuk" required>
+                                        <input type="number" class="form-control" id="hargaLayanan"
+                                            v-model="hargaLayanan" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Estimasi -->
+                            <div class="row">
+                                <div class="col-md-2 pr-1">
+                                    <div class="form-group">
+                                        <label for="waktuEstimasi">Waktu Estimasi</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-10">
+                                    <div class="form-group">
+                                        <input type="number" class="form-control" id="waktuEstimasi"
+                                            v-model="waktuEstimasi" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Deskripsi -->
+                            <div class="row">
+                                <div class="col-md-2 pr-1">
+                                    <div class="form-group">
+                                        <label for="deskripsi">Deskripsi</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-10">
+                                    <div class="form-group">
+                                        <input type="textarea" class="form-control" id="deskripsi" v-model="deskripsi"
+                                            required>
                                     </div>
                                 </div>
                             </div>
@@ -116,58 +104,55 @@ import axios from 'axios';
 export default {
     data() {
         return {
+            namaLayanan: '',
             namaBahan: '',
-            hargaBahan: '',
-            stok: '',
-            satuan: '',
-            namaPemasok: '',
-            tanggalMasuk: '',
-            daftarPemasok: []
+            hargaLayanan: '',
+            waktuEstimasi: '',
+            deskripsi: '',
+            daftarBahan: []
         };
     },
 
     mounted() {
-        this.getPemasok();
+        this.getBahan();
     },
 
     methods: {
-        getPemasok() {
-            axios.get("http://localhost:50/daftarpemasok")
+        getBahan() {
+            axios.get("http://localhost:50/daftarbahan")
                 .then(response => {
-                    this.daftarPemasok = response.data; // Menyimpan data pemasok dalam daftarPemasok
-                    console.log('Daftar Pemasok:', this.daftarPemasok);
+                    this.daftarBahan = response.data;
+                    console.log('Daftar Bahan:', this.daftarBahan);
                 })
                 .catch(error => {
-                    console.error("Terjadi kesalahan saat mengambil data pemasok:", error);
+                    console.error("Terjadi kesalahan saat mengambil data bahan:", error);
                 });
         },
         onSubmit() {
-            const harga = parseFloat(this.hargaBahan);
-            const stokValue = parseInt(this.stok, 10);
+            const hargaLayanan = parseFloat(this.hargaLayanan);
+            const waktuEstimasiValue = parseInt(this.waktuEstimasi, 10);
 
-            if (this.namaBahan.trim() && !isNaN(harga) && !isNaN(stokValue) && this.satuan.trim() && this.namaPemasok && this.tanggalMasuk) {
+            if (this.namaLayanan.trim() && this.namaBahan && !isNaN(hargaLayanan) && !isNaN(waktuEstimasiValue) && this.deskripsi) {
                 const dataToSend = {
-                    nama_bahan: this.namaBahan,
-                    harga_satuan: this.hargaBahan,
-                    stok: this.stok,
-                    satuan: this.satuan,
-                    pemasok_id: this.namaPemasok, // Kirim ID pemasok
-                    tanggal_masuk: this.tanggalMasuk,
+                    nama_layanan: this.namaLayanan,
+                    bahan_id: this.namaBahan,
+                    harga: this.hargaLayanan,
+                    waktu_estimasi: this.waktuEstimasi,
+                    deskripsi: this.deskripsi,
                 };
 
-                axios.post('http://localhost:50/daftarbahan', dataToSend)
+                axios.post('http://localhost:50/daftarlayanan', dataToSend)
                     .then(response => {
                         console.log('Data berhasil dikirim:', response.data);
                         // Reset form atau lakukan tindakan lain setelah sukses
                         alert('Data berhasil ditambahkan!');
                         // Reset form atau melakukan tindakan lainnya
+                        this.namaLayanan = '';
                         this.namaBahan = '';
-                        this.hargaBahan = '';
-                        this.stok = '';
-                        this.satuan = '';
-                        this.namaPemasok = '';
-                        this.tanggalMasuk = '';
-                        this.$router.push({ name: 'material' });
+                        this.hargaLayanan = '';
+                        this.waktuEstimasi = '';
+                        this.deskripsi = '';
+                        this.$router.push({ name: 'layanan' });
                     })
                     .catch(error => {
                         console.error('Terjadi kesalahan saat mengirim data:', error);

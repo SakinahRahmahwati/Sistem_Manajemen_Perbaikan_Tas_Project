@@ -13,10 +13,9 @@ app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = 'inventory_perbaikantas'
 mysql = MySQL(app)
 
-@app.route('/bahan', methods=['GET', 'POST', 'PUT', 'DELETE'])
-def bahan():
+@app.route('/daftarbahan', methods=['GET','POST'])
+def bahan_list():
     if request.method == 'GET':
-        # Mengambil semua data bahan
         cursor = mysql.connection.cursor()
         cursor.execute("""
             SELECT bahan.*, pemasok.nama_pemasok
@@ -24,12 +23,14 @@ def bahan():
             JOIN pemasok ON bahan.pemasok_id = pemasok.pemasok_id
         """)
         column_names = [i[0] for i in cursor.description]
-        data = [dict(zip(column_names, row)) for row in cursor.fetchall()]
+        data = []
+        for row in cursor.fetchall():
+            data.append(dict(zip(column_names,row)))
+
         cursor.close()
-        return jsonify(data)
+        return jsonify (data)
     
     elif request.method == 'POST':
-        # Menambahkan data bahan baru
         data = request.get_json()
         nama_bahan = data.get('nama_bahan')
         harga_satuan = data.get('harga_satuan')
@@ -39,19 +40,54 @@ def bahan():
         tgl_masuk = data.get('tanggal_masuk')
 
         cursor = mysql.connection.cursor()
+        cursor.execute("SELECT pemasok_id FROM pemasok WHERE pemasok_id = %s", (pemasok,))
+        pemasok_exists = cursor.fetchone()
+
+        if not pemasok_exists:
+            return jsonify({'error': 'Pemasok dengan ID tersebut tidak ditemukan'}), 400
+
+        # validasi bila ada data yang duplikat
+        #     cursor.execute("""
+        #     SELECT * FROM bahan 
+        #     WHERE nama_bahan = %s AND harga_satuan = %s AND satuan = %s AND stok = %s
+        # """, (nama_bahan, harga_satuan, satuan, stok))
+        # existing_bahan = cursor.fetchone()
+        
+        # if existing_bahan:
+        #     return jsonify({'error': 'Data dengan semua informasi yang sama sudah ada'}), 400
         sql = "INSERT INTO bahan (nama_bahan, harga_satuan, satuan, stok, pemasok_id, tanggal_masuk) VALUES (%s, %s, %s, %s, %s, %s)"
         cursor.execute(sql, (nama_bahan, harga_satuan, satuan, stok, pemasok, tgl_masuk))
         mysql.connection.commit()
         cursor.close()
         return jsonify({'message': 'Data added successfully'})
+
+@app.route('/bahan', methods=['GET', 'PUT', 'DELETE'])
+def bahan():
+    if request.method == 'GET':
+        # Mengambil ID dari query string
+        bahan_id = request.args.get('id', type=int)  # Mengambil parameter 'id' dari query string
+        if bahan_id is None:
+            return jsonify({'error': 'ID bahan tidak diberikan'}), 400
+        
+        # Menampilkan detail bahan berdasarkan ID
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT * FROM bahan WHERE bahan_id = %s", (bahan_id,))
+        column_names = [i[0] for i in cursor.description]
+        data = []
+        for row in cursor.fetchall():
+            data.append(dict(zip(column_names, row)))
+        cursor.close()
+        if data:
+            return jsonify(data)  # Menampilkan detail bahan jika ditemukan
+        else:
+            return jsonify({'error': 'bahan tidak ditemukan'}), 404
     
     elif request.method == 'PUT':
-        # Memperbarui data bahan
-        if 'id' not in request.args:
-            return jsonify({'error': 'ID is required for updating data'}), 400
-
-        bahan_id = request.args['id']
         data = request.get_json()
+        bahan_id = request.args.get('id', type=int)
+        if bahan_id is None:
+            return jsonify({'error': 'ID bahan tidak ditemukan'}), 400
+        
         nama_bahan = data.get('nama_bahan')
         harga_satuan = data.get('harga_satuan')
         satuan = data.get('satuan')
@@ -60,18 +96,22 @@ def bahan():
         tgl_masuk = data.get('tanggal_masuk')
 
         cursor = mysql.connection.cursor()
-        sql = "UPDATE bahan SET nama_bahan=%s, harga_satuan=%s, satuan=%s, stok=%s, pemasok_id=%s, tanggal_masuk=%s WHERE bahan_id=%s"
-        cursor.execute(sql, (nama_bahan, harga_satuan, satuan, stok, pemasok, tgl_masuk, bahan_id))
+        sql = """
+            UPDATE bahan 
+            SET nama_bahan=%s, harga_satuan=%s, stok=%s, satuan=%s, pemasok_id=%s, tanggal_masuk=%s 
+            WHERE bahan_id=%s
+        """
+        cursor.execute(sql, (nama_bahan, harga_satuan, stok, satuan, pemasok, tgl_masuk, bahan_id))
         mysql.connection.commit()
         cursor.close()
-        return jsonify({'message': 'Data updated successfully'})
-    
-    elif request.method == 'DELETE':
-        # Menghapus data bahan
-        if 'id' not in request.args:
-            return jsonify({'error': 'ID is required for deleting data'}), 400
+        return jsonify({'message': 'Data berhasil diperbarui'})
 
-        bahan_id = request.args['id']
+    elif request.method == 'DELETE':
+        # Menghapus bahan berdasarkan ID
+        bahan_id = request.args.get('id', type=int)  # Mengambil parameter 'id' dari query string
+        if bahan_id is None:
+            return jsonify({'error': 'ID bahan tidak diberikan'}), 400
+        
         cursor = mysql.connection.cursor()
         sql = "DELETE FROM bahan WHERE bahan_id = %s"
         cursor.execute(sql, (bahan_id,))
@@ -79,8 +119,8 @@ def bahan():
         cursor.close()
         return jsonify({'message': 'Data deleted successfully'})
 
-@app.route('/layanan', methods=['GET', 'POST', 'PUT', 'DELETE'])
-def layanan():
+@app.route('/daftarlayanan', methods=['GET','POST'])
+def layanan_list():
     if request.method == 'GET':
         cursor = mysql.connection.cursor()
         cursor.execute("""
@@ -105,37 +145,70 @@ def layanan():
         bahan = data.get('bahan_id')
 
         cursor = mysql.connection.cursor()
+        cursor.execute("SELECT bahan_id FROM bahan WHERE bahan_id = %s", (bahan,))
+        bahan_exists = cursor.fetchone()
+
+        if not bahan_exists:
+            return jsonify({'error': 'bahan dengan ID tersebut tidak ditemukan'}), 400
+
         sql = "INSERT INTO layanan (nama_layanan, harga, waktu_estimasi, deskripsi, bahan_id) VALUES (%s, %s, %s, %s, %s)"
         cursor.execute(sql, (nama_layanan, harga, waktu_estimasi, deskripsi, bahan))
         mysql.connection.commit()
         cursor.close()
         return jsonify({'message': 'Data added successfully'})
+
+@app.route('/layanan', methods=['GET', 'POST', 'PUT', 'DELETE'])
+def layanan():
+    if request.method == 'GET':
+        # Mengambil ID dari query string
+        layanan_id = request.args.get('id', type=int)  # Mengambil parameter 'id' dari query string
+        if layanan_id is None:
+            return jsonify({'error': 'ID layanan tidak ditemukan'}), 400
+        
+        # Menampilkan detail layanan berdasarkan ID
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT * FROM layanan WHERE layanan_id = %s", (layanan_id,))
+        column_names = [i[0] for i in cursor.description]
+        data = []
+        for row in cursor.fetchall():
+            data.append(dict(zip(column_names, row)))
+        cursor.close()
+        if data:
+            return jsonify(data)  # Menampilkan detail layanan jika ditemukan
+        else:
+            return jsonify({'error': 'layanan tidak ditemukan'}), 404
     
     elif request.method == 'PUT':
-        if 'id' not in request.args:
-            return jsonify({'error': 'ID is required for updating data'}), 400
-
-        layanan_id = request.args['id']
         data = request.get_json()
+        layanan_id = request.args.get('id', type=int)
+        if layanan_id is None:
+            return jsonify({'error': 'ID layanan tidak ditemukan'}), 400
+        
         nama_layanan = data.get('nama_layanan')
+        bahan_id = data.get('bahan_id')
         harga = data.get('harga')
         waktu_estimasi = data.get('waktu_estimasi')
         deskripsi = data.get('deskripsi')
-        bahan = data.get('bahan_id')
 
+        # Melakukan update data layanan
         cursor = mysql.connection.cursor()
-        sql = "UPDATE bahan SET nama_layanan=%s, harga=%s, waktu_estimasi=%s, deskripsi=%s, bahan_id=%s, WHERE layanan_id=%s"
-        cursor.execute(sql, (nama_layanan, harga, waktu_estimasi, deskripsi, bahan, layanan_id))
+        sql = """
+            UPDATE layanan 
+            SET nama_layanan=%s, bahan_id=%s, harga=%s, waktu_estimasi=%s, deskripsi=%s 
+            WHERE layanan_id=%s
+        """
+        cursor.execute(sql, (nama_layanan, bahan_id, harga, waktu_estimasi, deskripsi, layanan_id))
         mysql.connection.commit()
         cursor.close()
-        return jsonify({'message': 'Data updated successfully'})
+        return jsonify({'message': 'Data layanan berhasil diperbarui'})
+
     
     elif request.method == 'DELETE':
-        # Menghapus data bahan
-        if 'id' not in request.args:
-            return jsonify({'error': 'ID is required for deleting data'}), 400
-
-        layanan_id = request.args['id']
+        # Menghapus data layanan
+        layanan_id = request.args.get('id', type=int)  # Mengambil parameter 'id' dari query string
+        if layanan_id is None:
+            return jsonify({'error': 'ID layanan tidak diberikan'}), 400
+        
         cursor = mysql.connection.cursor()
         sql = "DELETE FROM layanan WHERE layanan_id = %s"
         cursor.execute(sql, (layanan_id,))
@@ -198,7 +271,7 @@ def pelanggan_list():
     #     cursor.execute(sql, (nama, alamat, telepon, email, tanggal_registrasi, pelanggan_id))
     #     mysql.connection.commit()
     #     cursor.close()
-    #     return jsonify({'message': 'Data updated successfully'})
+    #     return jsonify({'message': 'Data berhasil diperbarui'})
     
     # elif request.method == 'DELETE':
         # Menghapus data tanggal_registrasi
@@ -219,7 +292,7 @@ def pelanggan():
         # Mengambil ID dari query string
         pelanggan_id = request.args.get('id', type=int)  # Mengambil parameter 'id' dari query string
         if pelanggan_id is None:
-            return jsonify({'error': 'ID pelanggan tidak diberikan'}), 400
+            return jsonify({'error': 'ID pelanggan tidak ditemukan'}), 400
         
         # Menampilkan detail pelanggan berdasarkan ID
         cursor = mysql.connection.cursor()
@@ -239,7 +312,7 @@ def pelanggan():
         data = request.get_json()
         pelanggan_id = request.args.get('id', type=int)  # Mengambil parameter 'id' dari query string
         if pelanggan_id is None:
-            return jsonify({'error': 'ID pelanggan tidak diberikan'}), 400
+            return jsonify({'error': 'ID pelanggan tidak ditemukan'}), 400
         
         nama = data.get('nama')
         alamat = data.get('alamat')
@@ -252,13 +325,13 @@ def pelanggan():
         cursor.execute(sql, (nama, alamat, telepon, email, tanggal_registrasi, pelanggan_id))
         mysql.connection.commit()
         cursor.close()
-        return jsonify({'message': 'Data updated successfully'})
+        return jsonify({'message': 'Data berhasil diperbarui'})
 
     elif request.method == 'DELETE':
         # Menghapus pelanggan berdasarkan ID
         pelanggan_id = request.args.get('id', type=int)  # Mengambil parameter 'id' dari query string
         if pelanggan_id is None:
-            return jsonify({'error': 'ID pelanggan tidak diberikan'}), 400
+            return jsonify({'error': 'ID pelanggan tidak ditemukan'}), 400
         
         cursor = mysql.connection.cursor()
         sql = "DELETE FROM pelanggan WHERE pelanggan_id = %s"
@@ -341,7 +414,7 @@ def pemasok():
         cursor.execute(sql, (nama_pemasok, alamat, telepon, email, pemasok_id))
         mysql.connection.commit()
         cursor.close()
-        return jsonify({'message': 'Data updated successfully'})
+        return jsonify({'message': 'Data berhasil diperbarui'})
 
     elif request.method == 'DELETE':
         # Menghapus pemasok berdasarkan ID

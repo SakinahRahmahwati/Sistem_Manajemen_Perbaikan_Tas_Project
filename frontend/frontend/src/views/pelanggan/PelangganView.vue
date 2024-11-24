@@ -39,6 +39,20 @@
                 </tbody>
               </table>
             </div>
+                        <!-- Paginasi -->
+                        <nav aria-label="Table Pagination">
+              <ul class="pagination">
+                <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                  <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Previous</a>
+                </li>
+                <li class="page-item" :class="{ active: page === currentPage }" v-for="page in totalPages" :key="page">
+                  <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
+                </li>
+                <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                  <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">Next</a>
+                </li>
+              </ul>
+            </nav>
           </div>
         </div>
       </div>
@@ -48,6 +62,16 @@
 </template>
 
 <style scoped>
+.pagination {
+  justify-content: right;
+  margin-top: 15px;
+  margin-right: 10px;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
 .action-button {
   margin-right: 10px;
 }
@@ -60,12 +84,26 @@ export default {
   data() {
     return {
       api: 'http://localhost:50/daftarpelanggan', // Endpoint API
-      pelanggan: [], // Menyimpan data bahan dalam bentuk array
+      pelanggan: [],
+      currentPage: 1,
+      itemsPerPage: 10,
     };
   },
 
+  computed: {
+    totalPages() {
+      // Menghitung total halaman
+      return Math.ceil(this.pelanggan.length / this.itemsPerPage);
+    },
+    paginatedPelanggan() {
+      // Mengambil data untuk halaman saat ini
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return this.pelanggan.slice(start, end);
+    },
+  },
+
   mounted() {
-    // Memanggil metode getBahan saat komponen dimuat
     this.getPelanggan();
   },
 

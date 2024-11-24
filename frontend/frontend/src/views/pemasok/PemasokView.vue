@@ -31,13 +31,28 @@
                     <td>
                       <!-- <button class="btn btn-primary btn-fill action-button" style="margin-right: 10px;"
                         @click="detailItem(index)">Detail</button> -->
-                      <button class="btn btn-warning btn-fill action-button" @click="onUpdate(pemasok.pemasok_id)">Edit</button>
+                      <button class="btn btn-warning btn-fill action-button"
+                        @click="onUpdate(pemasok.pemasok_id)">Edit</button>
                       <button class="btn btn-danger btn-fill action-button" @click="onDelete(index)">Hapus</button>
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
+            <!-- Paginasi -->
+            <nav aria-label="Table Pagination">
+              <ul class="pagination">
+                <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                  <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Previous</a>
+                </li>
+                <li class="page-item" :class="{ active: page === currentPage }" v-for="page in totalPages" :key="page">
+                  <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
+                </li>
+                <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                  <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">Next</a>
+                </li>
+              </ul>
+            </nav>
           </div>
         </div>
       </div>
@@ -47,6 +62,16 @@
 </template>
 
 <style scoped>
+.pagination {
+  justify-content: right;
+  margin-top: 15px;
+  margin-right: 10px;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
 .action-button {
   margin-right: 10px;
 }
@@ -59,8 +84,22 @@ export default {
   data() {
     return {
       api: 'http://localhost:50/daftarpemasok', // Endpoint API
-      pemasok: [], // Menyimpan data bahan dalam bentuk array
+      pemasok: [],
+      currentPage: 1,
+      itemsPerPage: 10,
     };
+  },
+
+  computed: {
+    totalPages() {
+      return Math.ceil(this.pemasok.length / this.itemsPerPage);
+    },
+    paginatedPemasok() {
+      // Mengambil data untuk halaman saat ini
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return this.pemasok.slice(start, end);
+    },
   },
 
   mounted() {
@@ -72,8 +111,8 @@ export default {
     getPemasok() {
       axios.get(this.api)
         .then(response => {
-          console.log(response.data); 
-          this.pemasok = response.data; 
+          console.log(response.data);
+          this.pemasok = response.data;
         })
         .catch(error => {
           console.log('Error fetching data:', error);
