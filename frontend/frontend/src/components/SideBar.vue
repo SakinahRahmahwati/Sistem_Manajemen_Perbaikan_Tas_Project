@@ -18,12 +18,6 @@
                         <p>Dashboard</p>
                     </router-link>
                 </li>
-                <li class="nav-item" :class="{ active: isActive('/perbaikantas') }">
-                    <router-link class="nav-link" to="/perbaikantas">
-                        <i class="bi bi-briefcase-fill"></i>
-                        <p>Perbaikan Tas</p>
-                    </router-link>
-                </li>
                 <li class="nav-item" :class="{ active: isActive('/jenislayanan') }">
                     <router-link class="nav-link" to="/jenislayanan">
                         <i class="bi bi-gear"></i>
@@ -37,24 +31,30 @@
                     </router-link>
                 </li>
                 <li class="nav-item"
-                    :class="{ active: isActive('/pelanggan') || isActive('/pelanggan/insert') || isActive('/pelanggan/update') }">
-                    <router-link class="nav-link" to="/pelanggan">
-                        <i class="bi bi-people-fill"></i>
-                        <p>Pelanggan</p>
-                    </router-link>
-                </li>
-                <li class="nav-item" :class="{ active: isActive('/pemasok') || isActive('/pemasok/insert') }">
-                    <router-link class="nav-link" to="/pemasok">
-                        <i class="bi bi-boxes"></i>
-                        <p>Pemasok</p>
-                    </router-link>
-                </li>
-                <li class="nav-item" :class="{ active: isActive('/laporankeuangan') }">
-                    <router-link class="nav-link" to="/laporankeuangan">
-                        <i class="bi bi-cash-coin"></i>
-                        <p>Laporan Keuangan</p>
-                    </router-link>
-                </li>
+                :class="{ active: isActive('/pelanggan') || isActive('/pelanggan/insert') || isActive('/pelanggan/update') }">
+                <router-link class="nav-link" to="/pelanggan">
+                    <i class="bi bi-people-fill"></i>
+                    <p>Pelanggan</p>
+                </router-link>
+            </li>
+            <li class="nav-item" :class="{ active: isActive('/pemasok') || isActive('/pemasok/insert') }">
+                <router-link class="nav-link" to="/pemasok">
+                    <i class="bi bi-boxes"></i>
+                    <p>Pemasok</p>
+                </router-link>
+            </li>
+            <li class="nav-item" :class="{ active: isActive('/perbaikantas') }">
+                <router-link class="nav-link" to="/perbaikantas">
+                    <i class="bi bi-briefcase-fill"></i>
+                    <p>Perbaikan Tas</p>
+                </router-link>
+            </li>
+            <li class="nav-item" :class="{ active: isActive('/laporankeuangan') }">
+                <router-link class="nav-link" to="/laporankeuangan">
+                    <i class="bi bi-cash-coin"></i>
+                    <p>Laporan Keuangan</p>
+                </router-link>
+            </li>
                 <li class="nav-item" :class="{ active: isActive('') }">
                     <router-link class="nav-link" to="#">
                         <i class="bi bi-person-fill"></i>

@@ -4,7 +4,7 @@
             <div class="row">
                 <div class="card" style="width: 80%;">
                     <div class="card-header">
-                        <h4 class="card-title">Pemasok Baru</h4>
+                        <h4 class="card-title">Pemasok Baru </h4>
                     </div>
                     <div class="card-body">
                         <form @submit.prevent="onSubmit">
@@ -12,7 +12,7 @@
                             <div class="row">
                                 <div class="col-md-2 pr-1">
                                     <div class="form-group">
-                                        <label for="namaPemasok">Nama Pemasok</label>
+                                        <label for="namaPemasok">Nama Pemasok *</label>
                                     </div>
                                 </div>
                                 <div class="col-md-10">
@@ -27,7 +27,7 @@
                             <div class="row">
                                 <div class="col-md-2 pr-1">
                                     <div class="form-group">
-                                        <label for="alamatPemasok">Alamat</label>
+                                        <label for="alamatPemasok">Alamat *</label>
                                     </div>
                                 </div>
                                 <div class="col-md-10">
@@ -42,7 +42,7 @@
                             <div class="row">
                                 <div class="col-md-2 pr-1">
                                     <div class="form-group">
-                                        <label for="emailPemasok">Email</label>
+                                        <label for="emailPemasok">Email *</label>
                                     </div>
                                 </div>
                                 <div class="col-md-10">
@@ -57,7 +57,7 @@
                             <div class="row">
                                 <div class="col-md-2 pr-1">
                                     <div class="form-group">
-                                        <label for="telpPemasok">No Telephone</label>
+                                        <label for="telpPemasok">No Telpon *</label>
                                     </div>
                                 </div>
                                 <div class="col-md-10">

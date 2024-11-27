@@ -28,7 +28,7 @@
                     <td>{{ layanan.nama_layanan }}</td>
                     <td>{{ layanan.nama_bahan }}</td>
                     <td>{{ layanan.harga }}</td>
-                    <td>{{ layanan.waktu_estimasi }}</td>
+                    <td>{{ layanan.waktu_estimasi }} hari</td>
                     <td>{{ layanan.deskripsi.length > 50 ? layanan.deskripsi.substring(0, 50) + '...' :
                       layanan.deskripsi }}</td>
                     <td>
