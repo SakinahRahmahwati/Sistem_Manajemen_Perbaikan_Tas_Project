@@ -1,10 +1,5 @@
 <template>
     <div class="sidebar" data-color="white">
-        <!--
-         Tip 1: You can change the color of the sidebar using: data-color="purple | blue | green | orange | red"
- 
-         Tip 2: you can also add an image using data-image tag
-     -->
         <div class="sidebar-wrapper">
             <div class="logo">
                 <router-link to="/" class="simple-text">
@@ -30,31 +25,49 @@
                         <p>Material</p>
                     </router-link>
                 </li>
-                <li class="nav-item"
-                :class="{ active: isActive('/pelanggan') || isActive('/pelanggan/insert') || isActive('/pelanggan/update') }">
-                <router-link class="nav-link" to="/pelanggan">
-                    <i class="bi bi-people-fill"></i>
-                    <p>Pelanggan</p>
-                </router-link>
-            </li>
-            <li class="nav-item" :class="{ active: isActive('/pemasok') || isActive('/pemasok/insert') }">
-                <router-link class="nav-link" to="/pemasok">
-                    <i class="bi bi-boxes"></i>
-                    <p>Pemasok</p>
-                </router-link>
-            </li>
-            <li class="nav-item" :class="{ active: isActive('/perbaikantas') }">
-                <router-link class="nav-link" to="/perbaikantas">
+                <li class="nav-item" :class="{ active: isActive('/pelanggan') || isActive('/pelanggan/insert') || isActive('/pelanggan/update') }">
+                    <router-link class="nav-link" to="/pelanggan">
+                        <i class="bi bi-people-fill"></i>
+                        <p>Pelanggan</p>
+                    </router-link>
+                </li>
+                <li class="nav-item" :class="{ active: isActive('/pemasok') || isActive('/pemasok/insert') }">
+                    <router-link class="nav-link" to="/pemasok">
+                        <i class="bi bi-boxes"></i>
+                        <p>Pemasok</p>
+                    </router-link>
+                </li>
+                <li class="nav-item" :class="{ active: isActive('/perbaikan') }">
+                <router-link class="nav-link" to="/perbaikan">
                     <i class="bi bi-briefcase-fill"></i>
                     <p>Perbaikan Tas</p>
                 </router-link>
             </li>
-            <li class="nav-item" :class="{ active: isActive('/laporankeuangan') }">
-                <router-link class="nav-link" to="/laporankeuangan">
-                    <i class="bi bi-cash-coin"></i>
-                    <p>Laporan Keuangan</p>
-                </router-link>
-            </li>
+                <!-- Dropdown Menu for Perbaikan Tas -->
+                <!-- <li class="nav-item dropdown" :class="{ active: isDropdownActive('/perbaikan') }">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-briefcase-fill"></i>
+                        <p>Perbaikan Tas</p>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li :class="{ active: isActive('/perbaikan') }">
+                            <router-link class="dropdown-item" to="/perbaikan">
+                                List Perbaikan
+                            </router-link>
+                        </li>
+                        <li :class="{ active: isActive('/perbaikan/insert') }">
+                            <router-link class="dropdown-item" to="/perbaikan/insert">
+                                Perbaikan Baru
+                            </router-link>
+                        </li>
+                    </ul>
+                </li> -->
+                <li class="nav-item" :class="{ active: isActive('/laporankeuangan') }">
+                    <router-link class="nav-link" to="/laporankeuangan">
+                        <i class="bi bi-cash-coin"></i>
+                        <p>Laporan Keuangan</p>
+                    </router-link>
+                </li>
                 <li class="nav-item" :class="{ active: isActive('') }">
                     <router-link class="nav-link" to="#">
                         <i class="bi bi-person-fill"></i>
@@ -71,7 +84,23 @@ export default {
     methods: {
         isActive(route) {
             return this.$route.path === route;
-        }
-    }
-}
+        },
+        isDropdownActive(baseRoute) {
+            return this.$route.path.startsWith(baseRoute);
+        },
+    },
+};
 </script>
+
+<style scoped>
+/* Tambahkan gaya untuk dropdown agar sesuai */
+.nav-item.dropdown .dropdown-menu {
+    margin-left: 20px;
+    border: none;
+    background-color: #f8f9fa; /* Sesuaikan warna sesuai tema */
+}
+.dropdown-item.active {
+    background-color: #e9ecef; /* Warna submenu aktif */
+    font-weight: bold;
+}
+</style>

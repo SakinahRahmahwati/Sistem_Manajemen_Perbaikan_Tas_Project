@@ -31,7 +31,7 @@
                     <td>{{ bahan.stok }}</td>
                     <td>{{ bahan.satuan }}</td>
                     <td>{{ bahan.nama_pemasok }}</td>
-                    <td>{{ bahan.tanggal_masuk }}</td>
+                    <td>{{ bahan.tanggal_masuk ? new Date(bahan.tanggal_masuk).toLocaleDateString('id-ID', { year: 'numeric', month: 'numeric', day: 'numeric' }) : '' }}</td>
                     <td>
                       <button class="btn btn-info btn-fill action-button" @click="openModal(bahan.bahan_id)">+ Tambah
                         Stok</button>

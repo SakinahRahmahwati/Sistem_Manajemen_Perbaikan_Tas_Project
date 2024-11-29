@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Login from '@/views/LoginView.vue'
 import DashboardView from '@/views/DashboardView.vue'
-import PerbaikanTas from '@/views/perbaikan/PerbaikanTas.vue'
+import Perbaikan from '@/views/perbaikan/PerbaikanView.vue'
 import Material from '@/views/material/MaterialView.vue'
 import MaterialInsert from '@/views/material/MaterialInsert.vue'
 import MaterialUpdate from '@/views/material/MaterialUpdate.vue'
@@ -15,6 +15,7 @@ import Laporan from '@/views/laporankeuangan/LaporanKeuangan.vue'
 import Layanan from '@/views/layanan/LayananView.vue'
 import LayananInsert from '@/views/layanan/LayananInsert.vue'
 import LayananUpdate from '@/views/layanan/LayananUpdate.vue'
+import PerbaikanInsert from '@/views/perbaikan/PerbaikanInsert.vue'
 
 const routes = [
   {
@@ -24,9 +25,14 @@ const routes = [
     alias: '/dashboard'
   },
   {
-    path: '/perbaikantas',
-    name: 'perbaikantas',
-    component: PerbaikanTas
+    path: '/perbaikan',
+    name: 'perbaikan',
+    component: Perbaikan
+  },
+  {
+    path: '/perbaikan/insert',
+    name: 'perbaikanInsert',
+    component: PerbaikanInsert
   },
   {
     path: '/login',
