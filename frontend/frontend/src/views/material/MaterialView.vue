@@ -33,7 +33,10 @@
                     <td>{{ bahan.nama_pemasok }}</td>
                     <td>{{ bahan.tanggal_masuk }}</td>
                     <td>
-                      <button class="btn btn-warning btn-fill action-button" @click="onUpdate(bahan.bahan_id)">Edit</button>
+                      <button class="btn btn-info btn-fill action-button" @click="openModal(bahan.bahan_id)">+ Tambah
+                        Stok</button>
+                      <button class="btn btn-warning btn-fill action-button"
+                        @click="onUpdate(bahan.bahan_id)">Edit</button>
                       <button class="btn btn-danger btn-fill action-button" @click="onDelete(index)">Hapus</button>
                     </td>
                   </tr>
@@ -54,6 +57,28 @@
                 </li>
               </ul>
             </nav>
+          </div>
+        </div>
+      </div>
+      <!-- Modal Tambah Stok -->
+      <div class="modal fade" id="tambahStokModal" tabindex="-1" aria-labelledby="tambahStokModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="tambahStokModalLabel">Tambah Stok</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="stokTambahan" class="form-label">Jumlah Stok Tambahan</label>
+                <input type="number" id="stokTambahan" v-model="stokTambahan" class="form-control" />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+              <button type="button" class="btn btn-primary" @click="addStok">Simpan</button>
+            </div>
           </div>
         </div>
       </div>
@@ -79,6 +104,7 @@
 
 <script>
 import axios from 'axios';
+import * as bootstrap from 'bootstrap';
 
 export default {
   data() {
@@ -87,6 +113,8 @@ export default {
       bahan: [], // Menyimpan data bahan dalam bentuk array
       currentPage: 1, // Halaman saat ini
       itemsPerPage: 10, // Jumlah item per halaman
+      stokTambahan: 0, // Jumlah stok tambahan dari input modal
+      selectedBahanIndex: null,
     };
   },
 
@@ -146,6 +174,49 @@ export default {
           });
       } else {
         console.log('Penghapusan dibatalkan');
+      }
+    },
+    openModal(bahan_id) {
+      if (this.bahan.length === 0) {
+        console.error('Data bahan belum dimuat.');
+        return;
+      }
+      this.selectedBahanIndex = this.bahan.findIndex(bahan => bahan.bahan_id === bahan_id);
+      if (this.selectedBahanIndex === -1) {
+        console.error('Data bahan tidak ditemukan.');
+        return;
+      }
+      this.stokTambahan = 0;
+
+      const modalElement = document.getElementById('tambahStokModal');
+      const modalInstance = new bootstrap.Modal(modalElement);
+      modalInstance.show();
+    },
+    addStok() {
+      if (this.selectedBahanIndex !== -1) {
+        const bahan = this.bahan[this.selectedBahanIndex];
+
+        const stokTambahan = parseInt(this.stokTambahan || 0);
+        if (isNaN(stokTambahan) || stokTambahan <= 0) {
+          console.error('Stok tambahan tidak valid:', this.stokTambahan);
+          return;
+        }
+
+        axios.post(`http://localhost:50/bahan?id=${bahan.bahan_id}`, { stok: stokTambahan })
+          .then(response => {
+            console.log(response.data);
+            alert('Stok berhasil ditambahkan!');
+            this.stokTambahan = 0; // Reset stok tambahan
+            const modalElement = document.getElementById('tambahStokModal');
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            modalInstance.hide();
+            this.getBahan(); // Refresh data bahan setelah update
+          })
+          .catch(error => {
+            console.error('Error updating stock:', error.response ? error.response.data : error.message);
+          });
+      } else {
+        console.error('Index tidak valid atau data bahan belum dimuat.');
       }
     },
   }

@@ -3,6 +3,7 @@ from flask_mysqldb import MySQL
 from flask import request
 from flask_cors import CORS  # Impor CORS
 from dotenv import load_dotenv
+from datetime import datetime
 import os
 
 load_dotenv()
@@ -64,7 +65,7 @@ def bahan_list():
         cursor.close()
         return jsonify({'message': 'Data added successfully'})
 
-@app.route('/bahan', methods=['GET', 'PUT', 'DELETE'])
+@app.route('/bahan', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def bahan():
     if request.method == 'GET':
         # Mengambil ID dari query string
@@ -85,6 +86,33 @@ def bahan():
         else:
             return jsonify({'error': 'bahan tidak ditemukan'}), 404
     
+    elif request.method == 'POST':
+        # Menambahkan stok pada bahan yang ada
+        data = request.get_json()
+        bahan_id = request.args.get('id', type=int)  # ID bahan yang ingin ditambahkan stoknya
+        tambahan_stok = data.get('stok')  # Stok yang ingin ditambahkan
+        
+        if bahan_id is None or tambahan_stok is None or tambahan_stok <= 0:
+            return jsonify({'error': 'ID bahan dan jumlah stok yang ditambahkan harus valid'}), 400
+        
+        # Ambil stok yang ada di database
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT stok FROM bahan WHERE bahan_id = %s", (bahan_id,))
+        existing_stok = cursor.fetchone()
+        if not existing_stok:
+            return jsonify({'error': 'Bahan tidak ditemukan'}), 404
+        current_stok = existing_stok[0]
+        
+        # Menambah stok
+        new_stok = current_stok + tambahan_stok
+        
+        # Update stok di database
+        cursor.execute("UPDATE bahan SET stok = %s WHERE bahan_id = %s", (new_stok, bahan_id))
+        mysql.connection.commit()
+        cursor.close()
+        
+        return jsonify({'message': 'Stok berhasil diperbarui', 'new_stok': new_stok})
+
     elif request.method == 'PUT':
         data = request.get_json()
         bahan_id = request.args.get('id', type=int)
@@ -431,6 +459,125 @@ def pemasok():
         mysql.connection.commit()
         cursor.close()
         return jsonify({'message': 'Data deleted successfully'})
+
+@app.route('/daftarperbaikan', methods=['GET','POST'])
+def perbaikan_list():
+    if request.method == 'GET':
+        cursor = mysql.connection.cursor()
+        cursor.execute("""
+            SELECT 
+                perbaikan.perbaikan_id,
+                perbaikan.kode_perbaikan,
+                pelanggan.nama AS nama_pelanggan,
+                pelanggan.telepon AS notelp,
+                layanan.nama_layanan,
+                perbaikan.tanggal_masuk,
+                perbaikan.tanggal_selesai,
+                perbaikan.biaya_perbaikan,
+                perbaikan.status,
+                perbaikan.status_pembayaran
+            FROM perbaikan
+            LEFT JOIN pelanggan ON perbaikan.pelanggan_id = pelanggan.pelanggan_id
+            LEFT JOIN layanan ON perbaikan.layanan_id = layanan.layanan_id
+            GROUP BY perbaikan.perbaikan_id;
+        """)
+        column_names = [i[0] for i in cursor.description]
+        data = []
+        for row in cursor.fetchall():
+            # Menghitung waktu estimasi (selisih antara tanggal_masuk dan tanggal_selesai)
+            tanggal_masuk = row[column_names.index('tanggal_masuk')]
+            tanggal_selesai = row[column_names.index('tanggal_selesai')]
+        
+            if isinstance(tanggal_masuk, str):  # Jika tanggal_masuk adalah string, parsing ke datetime.date
+                    try:
+                        tanggal_masuk = datetime.strptime(tanggal_masuk, '%Y-%m-%d').date()
+                    except ValueError as e:
+                        print(f"Error parsing tanggal_masuk: {e}")  # Menangani kesalahan parsing
+                        tanggal_masuk = None
+
+            if isinstance(tanggal_selesai, str):  # Jika tanggal_selesai adalah string, parsing ke datetime.date
+                try:
+                    tanggal_selesai = datetime.strptime(tanggal_selesai, '%Y-%m-%d').date()
+                except ValueError as e:
+                    print(f"Error parsing tanggal_selesai: {e}")  # Menangani kesalahan parsing
+                    tanggal_selesai = None
+
+            if tanggal_masuk and tanggal_selesai:
+                estimasi = (tanggal_selesai - tanggal_masuk).days
+            else:
+                estimasi = None
+        
+        # Menambahkan data perbaikan beserta estimasi waktu
+        row_dict = dict(zip(column_names, row))
+        row_dict['waktu_estimasi'] = estimasi  # Menambahkan estimasi waktu ke dictionary
+        data.append(row_dict)
+
+        cursor.close()
+        return jsonify(data)
+    
+    elif request.method == 'POST':
+        data = request.get_json()
+        layanan_id = data.get('layanan_id')  # ID layanan yang dipilih
+        pelanggan_id = data.get('pelanggan_id')  # ID pelanggan yang memilih layanan
+        jumlah_layanan = data.get('jumlah_layanan', 1)  # Jumlah layanan yang diminta (default 1)
+
+        cursor = mysql.connection.cursor()
+        total_biaya = 0,
+
+        # Validasi apakah layanan_id ada di tabel layanan
+        cursor.execute("SELECT * FROM layanan WHERE layanan_id = %s", (layanan_id,))
+        layanan = cursor.fetchone()
+        if not layanan:
+            return jsonify({'error': 'Layanan tidak ditemukan'}), 404
+
+        # Ambil bahan terkait layanan tersebut
+        cursor.execute("""
+            SELECT bahan.bahan_id, bahan.stok, layanan.bahan_id 
+            FROM layanan
+            JOIN bahan ON layanan.bahan_id = bahan.bahan_id
+            WHERE layanan.layanan_id = %s
+        """, (layanan_id,))
+        bahan_list = cursor.fetchall()
+
+        # Periksa stok bahan terkait layanan
+        for bahan in bahan_list:
+            bahan_id, stok, layanan_bahan_id = bahan
+            if stok < jumlah_layanan:  # Misalnya, bahan_id terkait dengan layanan membutuhkan stok yang cukup
+                return jsonify({'error': f'Stok bahan {bahan_id} tidak mencukupi'}), 400
+
+        # Kurangi stok bahan sesuai kebutuhan
+        for bahan in bahan_list:
+            bahan_id, stok, layanan_bahan_id = bahan
+            total_bahan_dibutuhkan = jumlah_layanan  # Asumsikan satuan layanan sama dengan 1 bahan
+            cursor.execute("""
+                UPDATE bahan SET stok = stok - %s WHERE bahan_id = %s
+            """, (total_bahan_dibutuhkan, bahan_id))
+
+        # Simpan data perbaikan ke dalam tabel perbaikan
+        sql_perbaikan = """
+            INSERT INTO perbaikan (kode_perbaikan, pelanggan_id, layanan_id, tanggal_masuk, tanggal_selesai, status_pembayaran, biaya_perbaikan)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        kode_perbaikan = "P" + str(int(datetime.now().timestamp()))  # Kode perbaikan berbasis timestamp
+
+        # Pastikan Anda menghitung biaya_perbaikan sebelumnya
+        biaya_perbaikan = total_biaya,
+        cursor.execute(sql_perbaikan, (
+            kode_perbaikan, 
+            pelanggan_id, 
+            layanan_id, 
+            datetime.now().date(), 
+            None,
+            'Dalam Antrian',  # Status default
+            'Belum Bayar',  # Status pembayaran default
+            biaya_perbaikan
+        ))
+        perbaikan_id = cursor.lastrowid
+
+        mysql.connection.commit()
+        cursor.close()
+
+        return jsonify({'message': 'Perbaikan berhasil ditambahkan', 'perbaikan_id': perbaikan_id})
 
 if __name__== '__main__':
     app.run(host='127.0.0.1', port=50, debug=True)

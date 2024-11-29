@@ -39,7 +39,7 @@
                             </div>
 
                             <!-- edit_Stok -->
-                            <div class="row">
+                            <!-- <div class="row">
                                 <div class="col-md-2 pr-1">
                                     <div class="form-group">
                                         <label for="edit_stok">Edit Jumlah Stok</label>
@@ -48,10 +48,10 @@
                                 <div class="col-md-10">
                                     <div class="form-group">
                                         <input type="number" class="form-control" id="edit_stok" v-model="edit_stok"
-                                            required>
+                                            readonly>
                                     </div>
                                 </div>
-                            </div>
+                            </div> -->
 
                             <!-- edit_Satuan -->
                             <div class="row">
