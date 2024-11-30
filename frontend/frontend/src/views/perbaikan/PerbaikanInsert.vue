@@ -204,6 +204,7 @@ export default {
                 .then(() => {
                     alert('Data berhasil disimpan.');
                     this.resetForm();
+                    this.$router.push({ name: 'perbaikan' });
                 })
                 .catch(error => console.error('Error:', error));
         },

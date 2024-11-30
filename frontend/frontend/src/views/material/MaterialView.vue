@@ -1,6 +1,19 @@
 <template>
   <div class="content">
     <div class="container-fluid">
+      <!-- Notifikasi -->
+      <!-- Notifikasi -->
+      <div v-for="(notif, index) in notifications" :key="index"
+        class="alert alert-danger alert-dismissible fade show d-flex justify-content-between align-items-center"
+        role="alert">
+        <span class="text-start">
+          <strong>Peringatan:</strong> Stok bahan "{{ notif.nama_bahan }}" hanya tersisa {{ notif.stok }}!
+        </span>
+        <button type="button" class="btn-close-icon ms-auto" @click="closeNotification(index)" aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
       <button class="btn btn-primary btn-fill action-button" @click="onSubmit" style="margin-bottom: 16px;">+ Insert
         Data</button>
       <div class="row">
@@ -31,7 +44,10 @@
                     <td>{{ bahan.stok }}</td>
                     <td>{{ bahan.satuan }}</td>
                     <td>{{ bahan.nama_pemasok }}</td>
-                    <td>{{ bahan.tanggal_masuk ? new Date(bahan.tanggal_masuk).toLocaleDateString('id-ID', { year: 'numeric', month: 'numeric', day: 'numeric' }) : '' }}</td>
+                    <td>{{ bahan.tanggal_masuk ? new Date(bahan.tanggal_masuk).toLocaleDateString('id-ID', {
+                      year:
+                        'numeric', month: 'numeric', day: 'numeric'
+                    }) : '' }}</td>
                     <td>
                       <button class="btn btn-info btn-fill action-button" @click="openModal(bahan.bahan_id)">+ Tambah
                         Stok</button>
@@ -115,6 +131,7 @@ export default {
       itemsPerPage: 10, // Jumlah item per halaman
       stokTambahan: 0, // Jumlah stok tambahan dari input modal
       selectedBahanIndex: null,
+      notifications: [],
     };
   },
 
@@ -142,18 +159,31 @@ export default {
         .then(response => {
           console.log(response.data); // Log data API untuk debugging
           this.bahan = response.data; // Menyimpan data bahan dari API
+          this.checkLowStock();
         })
         .catch(error => {
           console.log('Error fetching data:', error);
         });
     },
+
+    checkLowStock() {
+      // Memfilter bahan dengan stok kurang dari 10
+      this.notifications = this.bahan.filter((item) => item.stok < 10);
+    },
+
+    closeNotification(index) {
+      this.notifications.splice(index, 1);
+    },
+
     onSubmit() {
       this.$router.push('/material/insert');
     },
+
     onUpdate(bahan_id) {
       // Logika untuk mengedit item
       this.$router.push({ name: 'materialUpdate', params: { id: bahan_id } });
     },
+
     onDelete(index) {
       const bahan_id = this.bahan[index].bahan_id;
 
@@ -176,6 +206,7 @@ export default {
         console.log('Penghapusan dibatalkan');
       }
     },
+
     openModal(bahan_id) {
       if (this.bahan.length === 0) {
         console.error('Data bahan belum dimuat.');
@@ -192,6 +223,7 @@ export default {
       const modalInstance = new bootstrap.Modal(modalElement);
       modalInstance.show();
     },
+
     addStok() {
       if (this.selectedBahanIndex !== -1) {
         const bahan = this.bahan[this.selectedBahanIndex];

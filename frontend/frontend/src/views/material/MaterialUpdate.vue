@@ -48,7 +48,7 @@
                                 <div class="col-md-10">
                                     <div class="form-group">
                                         <input type="number" class="form-control" id="edit_stok" v-model="edit_stok"
-                                            readonly>
+                                            >
                                     </div>
                                 </div>
                             </div> -->

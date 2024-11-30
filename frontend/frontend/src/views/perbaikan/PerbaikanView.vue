@@ -96,13 +96,14 @@
 </style>
 
 <script>
-import axios from 'axios';
+import axios from "axios";
 
 export default {
   data() {
     return {
-      api: 'http://localhost:50/daftarperbaikan', // Endpoint API
-      perbaikan: [], // Menyimpan data bahan dalam bentuk array
+      apiGet: "http://localhost:50/daftarperbaikan", // Endpoint untuk GET data
+      apiUpdate: "http://localhost:50/perbaikan", // Endpoint untuk PATCH data
+      perbaikan: [],
       currentPage: 1,
       itemsPerPage: 10,
     };
@@ -110,11 +111,9 @@ export default {
 
   computed: {
     totalPages() {
-      // Menghitung total halaman
       return Math.ceil(this.perbaikan.length / this.itemsPerPage);
     },
-    paginatedperbaikan() {
-      // Mengambil data untuk halaman saat ini
+    paginatedPerbaikan() {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
       return this.perbaikan.slice(start, end);
@@ -122,28 +121,35 @@ export default {
   },
 
   mounted() {
-    // Memanggil metode getBahan saat komponen dimuat
-    this.getperbaikan();
+    this.getPerbaikan();
   },
 
   methods: {
-    getperbaikan() {
-      axios.get(this.api)
-        .then(response => {
-          console.log(response.data); // Log data API untuk debugging
-          this.perbaikan = response.data; // Menyimpan data bahan dari API
-        })
-        .catch(error => {
-          console.log('Error fetching data:', error);
+    async getPerbaikan() {
+      try {
+        const response = await axios.get(this.apiGet);
+        this.perbaikan = response.data.sort((a, b) => {
+          if (a.status === "Selesai" && b.status !== "Selesai") return 1;
+          if (a.status !== "Selesai" && b.status === "Selesai") return -1;
+          if (a.status_pembayaran === "Sudah Bayar" && b.status_pembayaran !== "Sudah Bayar") return 1;
+          if (a.status_pembayaran !== "Sudah Bayar" && b.status_pembayaran === "Sudah Bayar") return -1;
+          return 0;
         });
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        alert("Gagal memuat data perbaikan.");
+      }
     },
+
     onSubmit() {
-      this.$router.push('/perbaikan/insert');
+      this.$router.push("/perbaikan/insert");
     },
+
     onUpdate(perbaikan_id) {
-      this.$router.push({ name: 'perbaikanUpdate', params: { id: perbaikan_id } });
+      this.$router.push({ name: "perbaikanUpdate", params: { id: perbaikan_id } });
     },
-    onDelete(index) {
+	
+	onDelete(index) {
       const perbaikan_id = this.perbaikan[index].perbaikan_id;
       const isConfirmed = window.confirm("Apakah Anda yakin ingin menghapus data perbaikan ini?");
 
@@ -161,24 +167,24 @@ export default {
         console.log('Penghapusan dibatalkan');
       }
     },
-    updateStatus(perbaikan_id, field, value) {
-      const payload = { [field]: value }; // Membuat data payload
-      axios.patch(`http://localhost:50/perbaikan/${perbaikan_id}`, payload)
-        .then(response => {
-          console.log(`Status ${field} berhasil diperbarui`, response.data);
-          alert(`Status ${field} berhasil diperbarui`);
-        })
-        .catch(error => {
-          console.error(`Gagal memperbarui ${field}:`, error);
-          alert(`Gagal memperbarui ${field}. Silakan coba lagi.`);
-        });
-    },
-    formatRupiah(value) {
-      const number = Number(value);
-      if (isNaN(number)) return '-';
-      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(number);
+
+    async updateStatus(perbaikan_id, field, value) {
+      const payload = { [field]: value };
+      try {
+        const response = await axios.patch(`${this.apiUpdate}?id=${perbaikan_id}`, payload);
+        console.log(`Status ${field} berhasil diperbarui`, response.data);
+        alert(`Status ${field} berhasil diperbarui`);
+      } catch (error) {
+        console.error(`Gagal memperbarui ${field}:`, error);
+        alert(`Gagal memperbarui ${field}. Silakan coba lagi.`);
+      }
     },
 
-  }
+    formatRupiah(value) {
+      const number = Number(value);
+      if (isNaN(number)) return "-";
+      return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(number);
+    },
+  },
 };
 </script>

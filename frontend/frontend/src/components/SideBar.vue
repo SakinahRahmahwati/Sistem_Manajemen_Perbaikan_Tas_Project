@@ -37,7 +37,7 @@
                         <p>Pemasok</p>
                     </router-link>
                 </li>
-                <li class="nav-item" :class="{ active: isActive('/perbaikan') }">
+                <li class="nav-item" :class="{ active: isActive('/perbaikan') || isActive('/perbaikan/insert') }">
                 <router-link class="nav-link" to="/perbaikan">
                     <i class="bi bi-briefcase-fill"></i>
                     <p>Perbaikan Tas</p>

@@ -17,6 +17,52 @@ app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD')
 app.config['MYSQL_DB'] = os.getenv('MYSQL_DB')
 mysql = MySQL(app)
 
+
+
+@app.route('/dashboard', methods=['GET'])
+def dashboard():
+    cursor = mysql.connection.cursor()
+    
+    # Ambil jumlah perbaikan dari tabel 'perbaikan'
+    cursor.execute("SELECT COUNT(*) FROM perbaikan WHERE status LIKE '%Selesai%'")
+    jumlahPerbaikan = cursor.fetchone()[0]
+    
+    # Ambil jumlah pelanggan dari tabel 'pelanggan'
+    cursor.execute('SELECT COUNT(*) FROM pelanggan')
+    jumlahPelanggan = cursor.fetchone()[0]
+    
+    # Ambil jumlah stok material dari tabel 'bahan'
+    # cursor.execute('SELECT SUM(stok) FROM bahan')
+    cursor.execute('SELECT COUNT(*) FROM bahan')
+    jenisBahan = cursor.fetchone()[0]
+    
+    # Ambil jumlah perbaikan per bulan berdasarkan 'created_at'
+    cursor.execute("""
+        SELECT DATE_FORMAT(created_at, '%Y-%m') AS month, COUNT(*) 
+        FROM perbaikan
+        WHERE status LIKE '%Selesai%'            
+        GROUP BY month
+        ORDER BY month ASC
+    """)
+    perbaikan_per_bulan = cursor.fetchall()
+    
+    # Menyusun data untuk grafik
+    labels = [row[0] for row in perbaikan_per_bulan]  # Bulan (format: 2024-11)
+    data = [row[1] for row in perbaikan_per_bulan]    # Jumlah perbaikan per bulan
+    
+    cursor.close()
+    
+    # Mengembalikan data dalam format JSON
+    return jsonify({
+        'jumlah Perbaikan': jumlahPerbaikan,
+        'jumlah Pelanggan': jumlahPelanggan,
+        'jenis Bahan': jenisBahan,
+        'chartData': {
+            'labels': labels,
+            'data': data
+        }
+    })
+
 @app.route('/daftarbahan', methods=['GET','POST'])
 def bahan_list():
     if request.method == 'GET':
@@ -489,11 +535,11 @@ def perbaikan_list():
             tanggal_selesai = row[column_names.index('tanggal_selesai')]
         
             if isinstance(tanggal_masuk, str):  # Jika tanggal_masuk adalah string, parsing ke datetime.date
-                    try:
-                        tanggal_masuk = datetime.strptime(tanggal_masuk, '%Y-%m-%d').date()
-                    except ValueError as e:
-                        print(f"Error parsing tanggal_masuk: {e}")  # Menangani kesalahan parsing
-                        tanggal_masuk = None
+                try:
+                    tanggal_masuk = datetime.strptime(tanggal_masuk, '%Y-%m-%d').date()
+                except ValueError as e:
+                    print(f"Error parsing tanggal_masuk: {e}")  # Menangani kesalahan parsing
+                    tanggal_masuk = None
 
             if isinstance(tanggal_selesai, str):  # Jika tanggal_selesai adalah string, parsing ke datetime.date
                 try:
@@ -507,77 +553,350 @@ def perbaikan_list():
             else:
                 estimasi = None
         
-        # Menambahkan data perbaikan beserta estimasi waktu
-        row_dict = dict(zip(column_names, row))
-        row_dict['waktu_estimasi'] = estimasi  # Menambahkan estimasi waktu ke dictionary
-        data.append(row_dict)
+            # Menambahkan data perbaikan beserta estimasi waktu
+            row_dict = dict(zip(column_names, row))
+            row_dict['waktu_estimasi'] = estimasi  # Menambahkan estimasi waktu ke dictionary
+            data.append(row_dict)
 
         cursor.close()
         return jsonify(data)
     
     elif request.method == 'POST':
         data = request.get_json()
-        layanan_id = data.get('layanan_id')  # ID layanan yang dipilih
-        pelanggan_id = data.get('pelanggan_id')  # ID pelanggan yang memilih layanan
-        jumlah_layanan = data.get('jumlah_layanan', 1)  # Jumlah layanan yang diminta (default 1)
+        layanan_ids = data.get('layanan_ids')  # List layanan
+        pelanggan_id = data.get('pelanggan_id')
+        tanggal_masuk = data.get('tanggal_masuk', datetime.now().date())
+        tanggal_selesai = data.get('tanggal_selesai')
+        status = data.get('status', 'Dalam Antrian')
+        status_pembayaran = data.get('status_pembayaran', 'Belum Bayar')
+        total_biaya = 0
 
         cursor = mysql.connection.cursor()
-        total_biaya = 0,
 
-        # Validasi apakah layanan_id ada di tabel layanan
-        cursor.execute("SELECT * FROM layanan WHERE layanan_id = %s", (layanan_id,))
-        layanan = cursor.fetchone()
-        if not layanan:
-            return jsonify({'error': 'Layanan tidak ditemukan'}), 404
-
-        # Ambil bahan terkait layanan tersebut
+        # Validasi apakah semua layanan_id ada di tabel layanan dan ambil harga masing-masing
         cursor.execute("""
-            SELECT bahan.bahan_id, bahan.stok, layanan.bahan_id 
+            SELECT layanan_id, harga 
+            FROM layanan 
+            WHERE layanan_id IN (%s)
+        """ % ','.join(['%s'] * len(layanan_ids)), layanan_ids)
+        valid_layanan = cursor.fetchall()
+        
+        if len(valid_layanan) != len(layanan_ids):
+            return jsonify({'error': 'Salah satu atau lebih layanan tidak ditemukan'}), 404
+
+        # Hitung total biaya dan simpan harga layanan untuk digunakan nanti
+        harga_layanan_map = {}
+        for layanan in valid_layanan:
+            layanan_id, harga = layanan
+            total_biaya += harga
+            harga_layanan_map[layanan_id] = harga
+
+        # Ambil bahan terkait semua layanan yang dipilih
+        cursor.execute("""
+            SELECT bahan.bahan_id, bahan.stok, layanan.layanan_id 
             FROM layanan
             JOIN bahan ON layanan.bahan_id = bahan.bahan_id
-            WHERE layanan.layanan_id = %s
-        """, (layanan_id,))
+            WHERE layanan.layanan_id IN (%s)
+        """ % ','.join(['%s'] * len(layanan_ids)), layanan_ids)
         bahan_list = cursor.fetchall()
 
-        # Periksa stok bahan terkait layanan
+        # Periksa stok bahan untuk semua layanan
         for bahan in bahan_list:
-            bahan_id, stok, layanan_bahan_id = bahan
-            if stok < jumlah_layanan:  # Misalnya, bahan_id terkait dengan layanan membutuhkan stok yang cukup
-                return jsonify({'error': f'Stok bahan {bahan_id} tidak mencukupi'}), 400
+            bahan_id, stok, layanan_id = bahan
+            if stok < 1:  # Per layanan minimal stok harus ada
+                return jsonify({'error': f'Stok bahan untuk layanan {layanan_id} tidak mencukupi'}), 400
 
         # Kurangi stok bahan sesuai kebutuhan
         for bahan in bahan_list:
-            bahan_id, stok, layanan_bahan_id = bahan
-            total_bahan_dibutuhkan = jumlah_layanan  # Asumsikan satuan layanan sama dengan 1 bahan
+            bahan_id, stok, layanan_id = bahan
             cursor.execute("""
-                UPDATE bahan SET stok = stok - %s WHERE bahan_id = %s
-            """, (total_bahan_dibutuhkan, bahan_id))
+                UPDATE bahan SET stok = stok - 1 WHERE bahan_id = %s
+            """, (bahan_id,))
 
-        # Simpan data perbaikan ke dalam tabel perbaikan
+        # Simpan data perbaikan ke dalam tabel `perbaikan`
         sql_perbaikan = """
-            INSERT INTO perbaikan (kode_perbaikan, pelanggan_id, layanan_id, tanggal_masuk, tanggal_selesai, status_pembayaran, biaya_perbaikan)
+            INSERT INTO perbaikan (kode_perbaikan, pelanggan_id, tanggal_masuk, tanggal_selesai, status, status_pembayaran, biaya_perbaikan)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         kode_perbaikan = "P" + str(int(datetime.now().timestamp()))  # Kode perbaikan berbasis timestamp
-
-        # Pastikan Anda menghitung biaya_perbaikan sebelumnya
-        biaya_perbaikan = total_biaya,
         cursor.execute(sql_perbaikan, (
-            kode_perbaikan, 
-            pelanggan_id, 
-            layanan_id, 
-            datetime.now().date(), 
-            None,
-            'Dalam Antrian',  # Status default
-            'Belum Bayar',  # Status pembayaran default
-            biaya_perbaikan
+            kode_perbaikan,
+            pelanggan_id,
+            tanggal_masuk,
+            tanggal_selesai,
+            status,
+            status_pembayaran,
+            total_biaya
         ))
         perbaikan_id = cursor.lastrowid
+
+        # Simpan data layanan ke dalam tabel `layanan_perbaikan`
+        sql_layanan_perbaikan = """
+            INSERT INTO layanan_perbaikan (perbaikan_id, layanan_id, harga)
+            VALUES (%s, %s, %s)
+        """
+        for layanan_id in layanan_ids:
+            harga = harga_layanan_map[layanan_id]
+            cursor.execute(sql_layanan_perbaikan, (perbaikan_id, layanan_id, harga))
+
+        # Komit semua perubahan
+        mysql.connection.commit()
+        cursor.close()
+
+        return jsonify({
+            'message': 'Perbaikan berhasil ditambahkan',
+            'perbaikan_id': perbaikan_id,
+            'total_biaya': total_biaya
+        })
+
+@app.route('/perbaikan', methods=['GET', 'PUT', 'DELETE', 'PATCH'])
+def perbaikan():
+    if request.method == 'GET':
+        # Mengambil ID dari query string
+        perbaikan_id = request.args.get('id', type=int)  # Mengambil parameter 'id' dari query string
+        if perbaikan_id is None:
+            return jsonify({'error': 'ID perbaikan tidak ditemukan'}), 400
+        
+        # Menampilkan detail layanan berdasarkan ID
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT * FROM layanan WHERE perbaikan_id = %s", (perbaikan_id,))
+        column_names = [i[0] for i in cursor.description]
+        data = []
+        for row in cursor.fetchall():
+            data.append(dict(zip(column_names, row)))
+        cursor.close()
+        if data:
+            return jsonify(data)  # Menampilkan detail layanan jika ditemukan
+        else:
+            return jsonify({'error': 'layanan tidak ditemukan'}), 404
+    
+    elif request.method == 'PATCH':
+        data = request.get_json()
+        perbaikan_id = request.args.get('id', type=int)
+        if perbaikan_id is None:
+            return jsonify({'error': 'ID layanan tidak ditemukan'}), 400
+        
+        status = data.get('status')  # Status perbaikan yang baru
+        status_pembayaran = data.get('status_pembayaran')  # Status pembayaran yang baru
+
+        if not status and not status_pembayaran:
+            return jsonify({'error': 'Perbarui Status perbaikan atau pembayaran'}), 400
+
+        cursor = mysql.connection.cursor()
+
+        if status:
+            cursor.execute("""
+                UPDATE perbaikan
+                SET status = %s
+                WHERE perbaikan_id = %s
+            """, (status, perbaikan_id))
+
+        if status_pembayaran:
+            cursor.execute("""
+                UPDATE perbaikan
+                SET status_pembayaran = %s
+                WHERE perbaikan_id = %s
+            """, (status_pembayaran, perbaikan_id))
 
         mysql.connection.commit()
         cursor.close()
 
-        return jsonify({'message': 'Perbaikan berhasil ditambahkan', 'perbaikan_id': perbaikan_id})
+        return jsonify({'message': 'Data perbaikan berhasil diperbarui'})
+
+    
+    elif request.method == 'PUT':
+        data = request.get_json()
+        layanan_id = request.args.get('id', type=int)
+        if layanan_id is None:
+            return jsonify({'error': 'ID layanan tidak ditemukan'}), 400
+        
+        nama_layanan = data.get('nama_layanan')
+        bahan_id = data.get('bahan_id')
+        harga = data.get('harga')
+        waktu_estimasi = data.get('waktu_estimasi')
+        deskripsi = data.get('deskripsi')
+
+        # Melakukan update data layanan
+        cursor = mysql.connection.cursor()
+        sql = """
+            UPDATE layanan 
+            SET nama_layanan=%s, bahan_id=%s, harga=%s, waktu_estimasi=%s, deskripsi=%s 
+            WHERE layanan_id=%s
+        """
+        cursor.execute(sql, (nama_layanan, bahan_id, harga, waktu_estimasi, deskripsi, layanan_id))
+        mysql.connection.commit()
+        cursor.close()
+        return jsonify({'message': 'Data layanan berhasil diperbarui'})
+
+    
+    elif request.method == 'DELETE':
+        perbaikan_id = request.args.get('id', type=int)
+        if perbaikan_id is None:
+            return jsonify({'error': 'ID perbaikan tidak diberikan'}), 400
+        
+        cursor = mysql.connection.cursor()
+        cursor.execute("""
+            DELETE FROM layanan_perbaikan WHERE perbaikan_id = %s
+        """, (perbaikan_id,))
+
+        cursor.execute("""
+            DELETE FROM perbaikan WHERE perbaikan_id = %s
+        """, (perbaikan_id,))
+        mysql.connection.commit()
+        cursor.close()
+        return jsonify({'message': 'Data deleted successfully'})
+
+@app.route('/laporanKeuangan', methods=['GET', 'POST'])
+def laporanKeuangan_list():
+    if request.method == 'GET':
+        # Mengambil laporan keuangan dari tabel laporan_keuangan
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT * FROM laporan_keuangan ORDER BY tanggal_laporan DESC")
+        laporan = cursor.fetchall()
+
+        data = []
+        for row in laporan:
+            tanggal_laporan = row[1].strftime('%Y-%m-%d') if row[1] else None  # Format tanggal
+            data.append({
+                "laporan_id": row[0],
+                "tanggal_laporan": tanggal_laporan,
+                "pendapatan": float(row[2]),
+                "pengeluaran": float(row[3])
+            })
+
+        # Laporan uang masuk berdasarkan perbaikan dengan status 'Sudah Bayar'
+        cursor.execute("""
+            SELECT 
+                perbaikan.kode_perbaikan,
+                perbaikan.biaya_perbaikan,
+                perbaikan.tanggal_pembayaran       
+            FROM perbaikan
+            WHERE perbaikan.status_pembayaran = 'Sudah Bayar'
+        """)
+        uangMasuk = cursor.fetchall()
+
+        # Laporan uang keluar berdasarkan biaya perbaikan dan status 'Sudah Bayar'
+        cursor.execute("""
+            SELECT 
+                DATE(tanggal_selesai) AS tanggal, 
+                SUM(biaya_perbaikan) AS biaya_perbaikan
+            FROM perbaikan
+            WHERE status_pembayaran = 'Sudah Bayar'
+            GROUP BY DATE(tanggal_selesai)
+        """)
+        uangKeluar = cursor.fetchall()
+
+        # Menyusun laporan uang masuk
+        sinkronisasi_laporan = {}
+        for row in uangMasuk:
+            kode_perbaikan = row[0]
+            biaya_perbaikan = row[1]
+            tanggal_pembayaran = row[2]
+            sinkronisasi_laporan[kode_perbaikan] = {
+                "tanggal": tanggal_pembayaran,
+                "pendapatan": float(biaya_perbaikan),
+                "pengeluaran": 0.0
+            }
+
+        # Sinkronisasi hasil akhir laporan
+        sinkronisasi_hasil = []
+        for kode_perbaikan, nilai in sinkronisasi_laporan.items():
+            sinkronisasi_hasil.append({
+                "kode_perbaikan": kode_perbaikan,
+                "tanggal_laporan": nilai["tanggal"],
+                "pendapatan": nilai["pendapatan"],
+                "pengeluaran": nilai["pengeluaran"],
+            })
+
+        # Update pengeluaran
+        for row in uangKeluar:
+            tanggal = row[0]
+            total_pengeluaran = row[1]
+            # Menyinkronkan laporan uang keluar dengan tanggal yang sesuai
+            for laporan in sinkronisasi_hasil:
+                if laporan['tanggal_laporan'] == tanggal:
+                    laporan['pengeluaran'] = total_pengeluaran
+
+         # Simpan laporan ke database (tabel laporan_keuangan)
+        for laporan in sinkronisasi_hasil:
+            # Memastikan kode_perbaikan belum ada di tabel laporan_keuangan
+            cursor.execute("SELECT 1 FROM laporan_keuangan WHERE kode_perbaikan = %s", (laporan['kode_perbaikan'],))
+            
+            # Jika kode_perbaikan tidak ditemukan, lakukan insert
+            if not cursor.fetchone():  # Kode perbaikan belum ada, baru insert
+                cursor.execute("""
+                    INSERT INTO laporan_keuangan (kode_perbaikan, tanggal_laporan, pendapatan, pengeluaran, deskripsi, keuntungan)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (
+                    laporan['kode_perbaikan'],
+                    laporan['tanggal_laporan'],
+                    laporan['pendapatan'],
+                    laporan['pengeluaran'],
+                    f"Laporan untuk {laporan['kode_perbaikan']}",
+                    laporan['pendapatan'] - laporan['pengeluaran']  # Keuntungan
+                ))
+        
+        mysql.connection.commit()            
+        cursor.close()
+        return jsonify({
+            # "laporan_keuangan": data,
+            "Laporan Keuangan": sinkronisasi_hasil
+        }), 200
+
+    elif request.method == 'POST':
+        # Update status pembayaran dan otomatis menambahkan laporan keuangan
+        data = request.get_json()
+        kode_perbaikan = data.get('kode_perbaikan')
+        status_pembayaran = data.get('status_pembayaran')
+
+        if not kode_perbaikan or not status_pembayaran:
+            return jsonify({"error": "kode_perbaikan dan status_pembayaran diperlukan"}), 400
+
+        try:
+            cursor = mysql.connection.cursor()
+
+            # Perbarui status pembayaran di tabel perbaikan
+            cursor.execute("""
+                UPDATE perbaikan
+                SET status_pembayaran = %s
+                WHERE kode_perbaikan = %s
+            """, (status_pembayaran, kode_perbaikan))
+
+            # Memastikan perubahan berhasil
+            if cursor.rowcount == 0:
+                return jsonify({"error": "Data perbaikan tidak ditemukan"}), 404
+            
+            if status_pembayaran == 'Belum Bayar':
+                cursor.execute("""
+                    DELETE FROM laporan_keuangan 
+                    WHERE deskripsi LIKE %s
+                """, (f"%{kode_perbaikan}%",))  # Menghapus laporan yang terkait dengan kode_perbaikan
+                mysql.connection.commit()
+
+            elif status_pembayaran == 'Sudah Bayar':
+                # Ambil biaya perbaikan dan kode_perbaikan dari tabel perbaikan
+                cursor.execute("""
+                    SELECT biaya_perbaikan FROM perbaikan WHERE kode_perbaikan = %s
+                """, (kode_perbaikan,))
+                result = cursor.fetchone()
+
+                if result:
+                    biaya_perbaikan = result[0]
+
+                    # Menambahkan data ke laporan_keuangan
+                    cursor.execute("""
+                        INSERT INTO laporan_keuangan (tanggal_laporan, pendapatan, pengeluaran)
+                        VALUES (NOW(), %s, 0)
+                    """, (biaya_perbaikan,))
+
+                    # Commit perubahan
+                    mysql.connection.commit()
+
+            cursor.close()
+            return jsonify({"message": "Status pembayaran berhasil diperbarui dan laporan keuangan otomatis dicatat"}), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
 
 if __name__== '__main__':
     app.run(host='127.0.0.1', port=50, debug=True)
