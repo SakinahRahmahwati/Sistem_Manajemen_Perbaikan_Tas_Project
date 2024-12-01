@@ -618,7 +618,11 @@ def perbaikan_list():
             INSERT INTO perbaikan (kode_perbaikan, pelanggan_id, tanggal_masuk, tanggal_selesai, status, status_pembayaran, biaya_perbaikan)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
-        kode_perbaikan = "P" + str(int(datetime.now().timestamp()))  # Kode perbaikan berbasis timestamp
+        now = datetime.now()
+    
+        date_str = now.strftime('%Y%m%d')
+        time_str = now.strftime('%H%M%S')
+        kode_perbaikan = f"P{date_str}{time_str}"  # Kode perbaikan berbasis timestamp
         cursor.execute(sql_perbaikan, (
             kode_perbaikan,
             pelanggan_id,
@@ -746,6 +750,74 @@ def perbaikan():
         cursor.close()
         return jsonify({'message': 'Data deleted successfully'})
 
+@app.route('/pengeluaran', methods=[ 'GET', 'POST'])
+def pengeluaran():  
+    if request.method == 'GET':
+        cursor = mysql.connection.cursor()
+        sql = """
+        SELECT 
+            pengeluaran.pengeluaran_id, 
+            pengeluaran.tanggal, 
+            pengeluaran.total_pengeluaran, 
+            pengeluaran.jenis_pengeluaran, 
+            pengeluaran.keterangan, 
+            pemasok.nama_pemasok, 
+            bahan.nama_bahan
+        FROM pengeluaran
+        LEFT JOIN pemasok ON pengeluaran.pemasok_id = pemasok.pemasok_id
+        LEFT JOIN bahan ON pengeluaran.bahan_id = bahan.bahan_id
+        ORDER BY pengeluaran.tanggal DESC
+        """
+        
+        cursor.execute(sql)
+        result = cursor.fetchall()
+
+        # Format data ke dalam JSON
+        laporan = []
+        for row in result:
+            laporan.append({
+                'pengeluaran_id': row[0],
+                'tanggal': row[1],
+                'total_pengeluaran': float(row[2]),
+                'jenis_pengeluaran': row[3],
+                'keterangan': row[4],
+                'nama_pemasok': row[5] if row[5] else "Tidak Diketahui",
+                'nama_bahan': row[6] if row[6] else "Tidak Diketahui",
+            })
+
+        cursor.close()
+
+        return jsonify({'message': laporan}), 200
+
+    elif request.method == 'POST':
+        data = request.get_json()
+
+        # Mendapatkan data dari request
+        pemasok_id = data.get('pemasok_id')
+        bahan_id = data.get('bahan_id')
+        total_pengeluaran = data.get('total_pengeluaran')
+        tanggal = data.get('tanggal')
+        keterangan = data.get('keterangan')
+        jenis_pengeluaran = data.get('jenis_pengeluaran')
+
+        # Validasi input (misalnya, memastikan tidak ada nilai kosong untuk field penting)
+        if not pemasok_id or not total_pengeluaran or not jenis_pengeluaran:
+            return jsonify({'error': 'Pemasok ID, Total Pengeluaran, dan Jenis Pengeluaran harus diisi'}), 400
+
+        cursor = mysql.connection.cursor()
+        
+        # SQL untuk memasukkan data ke tabel pengeluaran
+        sql = """
+        INSERT INTO pengeluaran (pemasok_id, bahan_id, total_pengeluaran, tanggal, keterangan, jenis_pengeluaran) 
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        
+        cursor.execute(sql, (pemasok_id, bahan_id, total_pengeluaran, tanggal, keterangan, jenis_pengeluaran))
+        mysql.connection.commit()
+        cursor.close()
+
+        return jsonify({'message': 'Pengeluaran berhasil ditambahkan'})
+        
 @app.route('/laporanKeuangan', methods=['GET', 'POST'])
 def laporanKeuangan_list():
     if request.method == 'GET':

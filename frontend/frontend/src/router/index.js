@@ -11,11 +11,13 @@ import PelangganUpdate from '@/views/pelanggan/PelangganUpdate.vue'
 import Pemasok from '@/views/pemasok/PemasokView.vue'
 import PemasokInsert from '@/views/pemasok/PemasokInsert.vue'
 import PemasokUpdate from '@/views/pemasok/PemasokUpdate.vue'
-import Laporan from '@/views/laporankeuangan/LaporanKeuangan.vue'
+import Laporan from '@/views/laporankeuangan/LaporanUangMasuk.vue'
 import Layanan from '@/views/layanan/LayananView.vue'
 import LayananInsert from '@/views/layanan/LayananInsert.vue'
 import LayananUpdate from '@/views/layanan/LayananUpdate.vue'
 import PerbaikanInsert from '@/views/perbaikan/PerbaikanInsert.vue'
+import PengeluaranInsert from '@/views/pengeluaran/PengeluaranInsert.vue'
+import LaporanUangKeluar from '@/views/laporankeuangan/LaporanUangKeluar.vue'
 
 const routes = [
   {
@@ -103,6 +105,16 @@ const routes = [
     path: '/jenislayanan/:id/edit',
     name: 'layananUpdate',
     component: LayananUpdate
+  },
+  {
+    path: '/pengeluaran',
+    name: 'pengeluaran',
+    component: LaporanUangKeluar
+  },
+  {
+    path: '/pengeluaran/insert',
+    name: 'pengeluaranInsert',
+    component: PengeluaranInsert
   },
   {
     path: '/about',

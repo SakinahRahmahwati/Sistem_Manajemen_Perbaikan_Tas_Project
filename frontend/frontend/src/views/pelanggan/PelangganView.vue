@@ -39,8 +39,8 @@
                 </tbody>
               </table>
             </div>
-                        <!-- Paginasi -->
-                        <nav aria-label="Table Pagination">
+            <!-- Paginasi -->
+            <nav aria-label="Table Pagination">
               <ul class="pagination">
                 <li class="page-item" :class="{ disabled: currentPage === 1 }">
                   <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Previous</a>

@@ -1,32 +1,26 @@
 <template>
   <div class="content">
     <div class="container-fluid">
+      <div style="margin-bottom: 20px;">
+        <button class="btn btn-link" style="color: black;" @click="showUangMasuk">Uang Masuk</button>
+        <button class="btn btn-link" style="color: black;" @click="showUangKeluar">Uang Keluar</button>
+      </div>
+      <!-- Filter and Search -->
+      <div class="d-flex justify-content-between mt-3">
+        <div class="d-flex">
+          <input type="date" v-model="startDate" class="form-control" @change="filterByDate" />
+          <input type="date" v-model="endDate" class="form-control ml-2" @change="filterByDate" />
+        </div>
+        <!-- <div>
+          <input type="text" v-model="searchQuery" class="form-control" placeholder="Search..." @input="filterSearch" />
+        </div> -->
+      </div>
       <div class="row">
         <div class="col-md-12">
           <div class="card strpied-tabled-with-hover shadow">
             <div class="card-header">
               <div class="d-flex justify-content-between align-items-center">
                 <h4 class="card-title">Laporan Uang Masuk</h4>
-                <div>
-                  <button class="btn btn-link" @click="showUangMasuk">Uang Masuk</button>
-                  <button class="btn btn-link" @click="showUangKeluar">Uang Keluar</button>
-                </div>
-              </div>
-              <!-- Filter and Search -->
-              <div class="d-flex justify-content-between mt-3">
-                <div class="d-flex">
-                  <input type="date" v-model="startDate" class="form-control" @change="filterByDate" />
-                  <input type="date" v-model="endDate" class="form-control ml-2" @change="filterByDate" />
-                </div>
-                <div>
-                  <input
-                    type="text"
-                    v-model="searchQuery"
-                    class="form-control"
-                    placeholder="Search..."
-                    @input="filterSearch"
-                  />
-                </div>
               </div>
             </div>
             <div class="card-body table-full-width table-responsive">
@@ -43,9 +37,10 @@
                   <tr v-for="(laporan_keuangan, index) in paginatedLayanan" :key="laporan_keuangan.laporan_id">
                     <td>{{ index + 1 }}</td>
                     <td>{{ laporan_keuangan.kode_perbaikan }}</td>
-                    <td>{{ laporan_keuangan.tanggal_laporan ? new Date(laporan_keuangan.tanggal_laporan).toLocaleDateString('id-ID', {
-                      year: 'numeric', month: 'numeric', day: 'numeric'
-                    }) : '' }}</td>
+                    <td>{{ laporan_keuangan.tanggal_laporan ? new
+                      Date(laporan_keuangan.tanggal_laporan).toLocaleDateString('id-ID', {
+                        year: 'numeric', month: 'numeric', day: 'numeric'
+                      }) : '' }}</td>
                     <td>{{ formatRupiah(laporan_keuangan.pendapatan) }}</td>
                   </tr>
                 </tbody>
@@ -66,8 +61,8 @@
               </ul>
             </nav>
             <!-- Print Button -->
-            <div class="d-flex justify-content-end mt-3">
-              <button class="btn btn-primary" @click="printTable">Cetak</button>
+            <div class="d-flex justify-content-start mt-3 mb-3 ml-3">
+              <button class="btn btn-success btn-fill" @click="printTable">Cetak</button>
             </div>
           </div>
         </div>
@@ -95,6 +90,7 @@
 .pagination {
   justify-content: right;
   margin-top: 15px;
+  margin-right: 15px;
 }
 
 .page-link {
@@ -204,8 +200,7 @@ export default {
     },
     showUangKeluar() {
       // Logic for showing "Uang Keluar" data
-      this.api = 'http://localhost:50/laporanKeuanganKeluar';
-      this.getLaporanKeuangan(); // Re-fetch data for "Uang Keluar"
+      this.$router.push('/pengeluaran');
     },
     printTable() {
       const printWindow = window.open('', '', 'width=800,height=600');

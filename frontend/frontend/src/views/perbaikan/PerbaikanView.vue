@@ -7,7 +7,7 @@
         <div class="col-md-12">
           <div class="card strpied-tabled-with-hover">
             <div class="card-header">
-              <h4 class="card-title">List Perbaikan</h4>
+              <h4 class="card-title">Daftar Perbaikan</h4>
             </div>
             <div class="card-body table-full-width table-responsive">
               <table class="table table-hover">

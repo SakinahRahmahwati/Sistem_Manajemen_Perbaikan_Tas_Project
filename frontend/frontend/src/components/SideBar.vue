@@ -62,7 +62,13 @@
                         </li>
                     </ul>
                 </li> -->
-                <li class="nav-item" :class="{ active: isActive('/laporankeuangan') }">
+                <li class="nav-item" :class="{ active: isActive('/pengeluaran/insert') }">
+                    <router-link class="nav-link" to="/pengeluaran/insert">
+                        <i class="bi bi-box-arrow-up"></i>
+                        <p>Pengeluaran</p>
+                    </router-link>
+                </li>
+                <li class="nav-item" :class="{ active: isActive('/laporankeuangan') || isActive('/pengeluaran') }">
                     <router-link class="nav-link" to="/laporankeuangan">
                         <i class="bi bi-cash-coin"></i>
                         <p>Laporan Keuangan</p>

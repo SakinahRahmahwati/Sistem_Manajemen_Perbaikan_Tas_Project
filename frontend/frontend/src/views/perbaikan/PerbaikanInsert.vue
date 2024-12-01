@@ -175,7 +175,20 @@ export default {
                 .catch(error => console.error('Error:', error));
         },
         generateKodePerbaikan() {
-            return `P${Math.floor(Date.now() / 1000)}`;
+            const now = new Date();
+            const dateStr = now.getFullYear() +
+                String(now.getMonth() + 1).padStart(2, '0') +
+                String(now.getDate()).padStart(2, '0'); // Format YYYYMMDD
+
+            // Ambil jam, menit, dan detik
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+
+            // Gabungkan jam, menit, dan detik menjadi HHMMSS
+            const timeStr = hours + minutes + seconds;
+
+            return `P${dateStr}${timeStr}`;
         },
         updateHarga(index) {
             const selectedLayanan = this.daftarLayanan.find(
