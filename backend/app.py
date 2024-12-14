@@ -482,25 +482,46 @@ def layanan_list():
         return jsonify (data)
     
     elif request.method == 'POST':
-        data = request.get_json()
+        # Mengambil data dari form
+        data = request.form
         nama_layanan = data.get('nama_layanan')
         harga = data.get('harga')
         waktu_estimasi = data.get('waktu_estimasi')
         deskripsi = data.get('deskripsi')
-        bahan = data.get('bahan_id')
+        bahan_id = data.get('bahan_id')
 
+        # Validasi file gambar
+        if 'gambar' not in request.files or not request.files['gambar']:
+            return jsonify({'error': 'File gambar harus diunggah'}), 400
+        gambar = request.files['gambar']
+        if not allowed_file(gambar.filename):
+            return jsonify({'error': 'File gambar tidak valid'}), 400
+        
+        # Buat direktori jika belum ada
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+        # Simpan file gambar
+        filename = secure_filename(gambar.filename)
+        gambar.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        gambar_path = filename
+
+        # Validasi bahan
         cursor = mysql.connection.cursor()
-        cursor.execute("SELECT bahan_id FROM bahan WHERE bahan_id = %s", (bahan,))
+        cursor.execute("SELECT bahan_id FROM bahan WHERE bahan_id = %s", (bahan_id,))
         bahan_exists = cursor.fetchone()
 
         if not bahan_exists:
-            return jsonify({'error': 'bahan dengan ID tersebut tidak ditemukan'}), 400
+            return jsonify({'error': 'Bahan dengan ID tersebut tidak ditemukan'}), 400
 
-        sql = "INSERT INTO layanan (nama_layanan, harga, waktu_estimasi, deskripsi, bahan_id) VALUES (%s, %s, %s, %s, %s)"
-        cursor.execute(sql, (nama_layanan, harga, waktu_estimasi, deskripsi, bahan))
+        sql = """
+        INSERT INTO layanan (nama_layanan, harga, waktu_estimasi, deskripsi, bahan_id, gambar)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(sql, (nama_layanan, harga, waktu_estimasi, deskripsi, bahan_id, gambar_path))
         mysql.connection.commit()
         cursor.close()
-        return jsonify({'message': 'Data added successfully'})
+
+        return jsonify({'message': 'Data berhasil ditambahkan'}), 201
 
 @app.route('/layanan', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def layanan():
@@ -524,29 +545,58 @@ def layanan():
             return jsonify({'error': 'layanan tidak ditemukan'}), 404
     
     elif request.method == 'PUT':
-        data = request.get_json()
         layanan_id = request.args.get('id', type=int)
         if layanan_id is None:
             return jsonify({'error': 'ID layanan tidak ditemukan'}), 400
-        
-        nama_layanan = data.get('nama_layanan')
-        bahan_id = data.get('bahan_id')
-        harga = data.get('harga')
-        waktu_estimasi = data.get('waktu_estimasi')
-        deskripsi = data.get('deskripsi')
 
-        # Melakukan update data layanan
+        # Ambil data dari request
+        nama_layanan = request.form.get('nama_layanan')
+        bahan_id = request.form.get('bahan_id')
+        harga = request.form.get('harga')
+        waktu_estimasi = request.form.get('waktu_estimasi')
+        deskripsi = request.form.get('deskripsi')
+        gambar = request.files.get('gambar_layanan')  # Ambil gambar dari request
+
         cursor = mysql.connection.cursor()
-        sql = """
-            UPDATE layanan 
-            SET nama_layanan=%s, bahan_id=%s, harga=%s, waktu_estimasi=%s, deskripsi=%s 
-            WHERE layanan_id=%s
-        """
-        cursor.execute(sql, (nama_layanan, bahan_id, harga, waktu_estimasi, deskripsi, layanan_id))
+
+        # Ambil gambar lama dari database
+        cursor.execute("SELECT gambar FROM layanan WHERE layanan_id = %s", (layanan_id,))
+        existing_gambar = cursor.fetchone()
+        old_filename = existing_gambar[0] if existing_gambar and existing_gambar[0] else None
+
+        if gambar:
+            # Mengamankan nama file
+            filename = secure_filename(gambar.filename)
+
+            # Simpan file gambar ke folder yang ditentukan
+            gambar.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+            # Hapus gambar lama jika ada
+            if old_filename:
+                old_file_path = os.path.join(app.config['UPLOAD_FOLDER'], old_filename)
+                if os.path.exists(old_file_path):
+                    os.remove(old_file_path)
+
+            # Update data layanan dengan gambar baru
+            sql = """
+                UPDATE layanan 
+                SET nama_layanan=%s, bahan_id=%s, harga=%s, waktu_estimasi=%s, deskripsi=%s, gambar=%s 
+                WHERE layanan_id=%s
+            """
+            cursor.execute(sql, (nama_layanan, bahan_id, harga, waktu_estimasi, deskripsi, filename, layanan_id))
+        else:
+            # Jika tidak ada gambar baru, gunakan gambar lama
+            sql = """
+                UPDATE layanan 
+                SET nama_layanan=%s, bahan_id=%s, harga=%s, waktu_estimasi=%s, deskripsi=%s, gambar=%s 
+                WHERE layanan_id=%s
+            """
+            cursor.execute(sql, (nama_layanan, bahan_id, harga, waktu_estimasi, deskripsi, old_filename, layanan_id))
+
         mysql.connection.commit()
         cursor.close()
-        return jsonify({'message': 'Data layanan berhasil diperbarui'})
 
+        return jsonify({'message': 'Data layanan berhasil diperbarui'})
     
     elif request.method == 'DELETE':
         # Menghapus data layanan

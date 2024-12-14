@@ -19,6 +19,7 @@
                     <th>Harga</th>
                     <th>Waktu Estimasi</th>
                     <th>Deskripsi</th>
+                    <th>Gambar</th>
                     <th>Aksi</th>
                   </tr>
                 </thead>
@@ -31,9 +32,16 @@
                     <td>{{ layanan.waktu_estimasi }} hari</td>
                     <td>{{ layanan.deskripsi.length > 50 ? layanan.deskripsi.substring(0, 50) + '...' :
                       layanan.deskripsi }}</td>
+                    <td><template v-if="layanan.gambar">
+                        <img :src="`http://localhost:50/uploads/images/${layanan.gambar}`" alt="Gambar Layanan"
+                          class="img-thumbnail" style="width: 100px; height: 100px;">
+                      </template>
+                      <span v-else>No Image</span>
+                    </td>
                     <td>
                       <!-- <button class="btn btn-primary btn-fill action-button" style="margin-right: 10px;" @click="detailItem(index)">Detail</button> -->
-                      <button class="btn btn-warning btn-fill action-button" @click="onUpdate(layanan.layanan_id)">Edit</button>
+                      <button class="btn btn-warning btn-fill action-button"
+                        @click="onUpdate(layanan.layanan_id)">Edit</button>
                       <button class="btn btn-danger btn-fill action-button" @click="onDelete(index)">Hapus</button>
                     </td>
                   </tr>
@@ -79,6 +87,7 @@
 
 <script>
 import axios from 'axios';
+import * as bootstrap from 'bootstrap';
 
 export default {
   data() {

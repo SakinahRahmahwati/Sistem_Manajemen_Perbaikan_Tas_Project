@@ -83,10 +83,34 @@
                                 <div class="col-md-10">
                                     <div class="form-group">
                                         <input type="textarea" class="form-control" id="deskripsi" v-model="deskripsi"
-                                            required>
+                                        required style="height: 300px;">
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Gambar Layanan -->
+                            <div class="row">
+                                <div class="col-md-2 pr-1">
+                                    <div class="form-group">
+                                        <label for="gambar">Gambar Layanan</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-10">
+                                    <div class="form-group">
+                                        <input type="file" class="form-control" id="gambar" @change="handleFileUpload"
+                                            accept="image/*">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Preview Gambar -->
+                            <div v-if="previewImage" class="row">
+                                <div class="col-md-12 text-center">
+                                    <img :src="previewImage" alt="Preview Gambar" class="img-thumbnail"
+                                        style="max-width: 200px;">
+                                </div>
+                            </div>
+
 
                             <button type="submit" class="btn btn-info btn-fill pull-right">Submit</button>
                             <div class="clearfix"></div>
@@ -109,6 +133,8 @@ export default {
             hargaLayanan: '',
             waktuEstimasi: '',
             deskripsi: '',
+            gambar: null,
+            previewImage: null,
             daftarBahan: []
         };
     },
@@ -128,31 +154,32 @@ export default {
                     console.error("Terjadi kesalahan saat mengambil data bahan:", error);
                 });
         },
+        handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                this.gambar = file;
+                this.previewImage = URL.createObjectURL(file);
+            }
+        },
         onSubmit() {
             const hargaLayanan = parseFloat(this.hargaLayanan);
             const waktuEstimasiValue = parseInt(this.waktuEstimasi, 10);
 
             if (this.namaLayanan.trim() && this.namaBahan && !isNaN(hargaLayanan) && !isNaN(waktuEstimasiValue) && this.deskripsi) {
-                const dataToSend = {
-                    nama_layanan: this.namaLayanan,
-                    bahan_id: this.namaBahan,
-                    harga: this.hargaLayanan,
-                    waktu_estimasi: this.waktuEstimasi,
-                    deskripsi: this.deskripsi,
-                };
+                const formData = new FormData();
+                formData.append('nama_layanan', this.namaLayanan);
+                formData.append('bahan_id', this.namaBahan);
+                formData.append('harga', this.hargaLayanan);
+                formData.append('waktu_estimasi', this.waktuEstimasi);
+                formData.append('deskripsi', this.deskripsi);
+                formData.append('gambar', this.gambar);
 
-                axios.post('http://localhost:50/daftarlayanan', dataToSend)
+                axios.post('http://localhost:50/daftarlayanan', formData)
                     .then(response => {
                         console.log('Data berhasil dikirim:', response.data);
-                        // Reset form atau lakukan tindakan lain setelah sukses
                         alert('Data berhasil ditambahkan!');
-                        // Reset form atau melakukan tindakan lainnya
-                        this.namaLayanan = '';
-                        this.namaBahan = '';
-                        this.hargaLayanan = '';
-                        this.waktuEstimasi = '';
-                        this.deskripsi = '';
                         this.$router.push({ name: 'layanan' });
+                        this.resetForm();
                     })
                     .catch(error => {
                         console.error('Terjadi kesalahan saat mengirim data:', error);
@@ -160,6 +187,17 @@ export default {
             } else {
                 alert('Silakan isi semua kolom yang wajib.');
             }
+        },
+        onFileChange(event) {
+            this.gambar = event.target.files[0];
+        },
+        resetForm() {
+            this.namaLayanan = '';
+            this.namaBahan = '';
+            this.hargaLayanan = '';
+            this.waktuEstimasi = '';
+            this.deskripsi = '';
+            this.gambar = null;
         }
     }
 }
