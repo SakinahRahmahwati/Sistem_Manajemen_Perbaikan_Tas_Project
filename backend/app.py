@@ -155,9 +155,24 @@ def list_pengguna():
         return jsonify (data)
 
 # Insert Pengguna Baru
-@app.route('/kelola_akun', methods=['POST', 'PUT', 'DELETE'])
+@app.route('/kelola_akun', methods=['GET','POST', 'PUT', 'DELETE'])
 def kelola_akun():
-    if request.method == 'POST':
+    if request.method == 'GET':
+        pengguna_id = request.args.get('pengguna_id')  # Mengambil ID pengguna dari parameter query string
+        if not pengguna_id:
+            return jsonify({'error': 'pengguna_id is required'}), 400
+
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT * FROM pengguna WHERE pengguna_id = %s", (pengguna_id,))
+        user = cursor.fetchone()
+        if not user:
+            return jsonify({'error': 'Pengguna tidak ditemukan'}), 404
+
+        column_names = [i[0] for i in cursor.description]
+        data = dict(zip(column_names, user))
+        cursor.close()
+        return jsonify(data)
+    elif request.method == 'POST':
         data = request.get_json()
         username = data.get('username')
         password = data.get('password')  # Ambil password mentah (plain text)
@@ -190,15 +205,15 @@ def kelola_akun():
     elif request.method == 'PUT':
         data = request.get_json()
         pengguna_id = data.get('pengguna_id')
+        nama_pengguna = data.get('nama_pengguna')
+        no_telp = data.get('no_telp')
         username = data.get('username')
         password_hash = data.get('password_hash')
         role = data.get('role')
 
         # Validasi input
-        if not pengguna_id or not username or not password_hash or not role:
-            return jsonify({'error': 'pengguna_id, username, password_hash, and role are required'}), 400
-        if role not in ['Admin', 'Kepala Toko', 'Staff']:
-            return jsonify({'error': 'Invalid role'}), 400
+        if not pengguna_id:
+            return jsonify({'error': 'pengguna_id is required'}), 400
 
         # Periksa apakah pengguna ada sebelum update
         cursor = mysql.connection.cursor()
@@ -207,8 +222,34 @@ def kelola_akun():
         if not user:
             return jsonify({'error': 'Pengguna tidak ditemukan'}), 404
 
-        cursor.execute("""UPDATE pengguna SET username = %s, password_hash = %s, role = %s
-                          WHERE pengguna_id = %s""", (username, password_hash, role, pengguna_id))
+        # Buat query update dinamis
+        update_fields = []
+        update_values = []
+
+        if username is not None:  # Memeriksa apakah username ada dalam permintaan
+            update_fields.append("username = %s")
+            update_values.append(username)
+
+        if password_hash is not None:  # Memeriksa apakah password_hash ada dalam permintaan
+            update_fields.append("password_hash = %s")
+            update_values.append(password_hash)
+
+        if role is not None:  # Memeriksa apakah role ada dalam permintaan
+            if role not in ['Admin', 'Kepala Toko', 'Staff']:
+                return jsonify({'error': 'Invalid role'}), 400
+            update_fields.append("role = %s")
+            update_values.append(role)
+
+        # Jika tidak ada field yang ingin diupdate
+        if not update_fields:
+            return jsonify({'error': 'No fields to update'}), 400
+
+        # Menambahkan pengguna_id ke akhir update_values
+        update_values.append(pengguna_id)
+
+        # Menyusun query update
+        query = f"UPDATE pengguna SET {', '.join(update_fields)} WHERE pengguna_id = %s"
+        cursor.execute(query, update_values)
         mysql.connection.commit()
         cursor.close()
         return jsonify({'message': 'Pengguna berhasil diupdate'})

@@ -31,7 +31,7 @@
                       <!-- <button class="btn btn-primary btn-fill action-button" style="margin-right: 10px;"
                         @click="detailItem(index)">Detail</button> -->
                       <button class="btn btn-warning btn-fill action-button"
-                        @click="onUpdate(pemasok.pemasok_id)">Edit</button>
+                        @click="onUpdate(pengguna.pengguna_id)">Edit</button>
                       <button class="btn btn-danger btn-fill action-button" @click="onDelete(index)">Hapus</button>
                     </td>
                   </tr>
@@ -117,32 +117,28 @@ export default {
           console.log('Error fetching data:', error);
         });
     },
-    // onUpdate(pemasok_id) {
-    //   // Logika untuk mengedit item
-    //   this.$router.push({ name: 'pemasokUpdate', params: { id: pemasok_id } });
-    // },
-    // onDelete(index) {
-    //   const pemasok_id = this.pemasok[index].pemasok_id;
+    onUpdate(pengguna_id) {
+      this.$router.push({ name: 'akunUpdate', params: { id: pengguna_id } });
+    },
+    onDelete(index) {
+      const pengguna_id = this.pengguna[index].pengguna_id;
 
-    //   // Menampilkan konfirmasi peringatan
-    //   const isConfirmed = window.confirm("Apakah Anda yakin ingin menghapus data pemasok ini?");
+      const isConfirmed = window.confirm("Apakah Anda yakin ingin menghapus data pengguna ini?");
 
-    //   if (isConfirmed) {
-    //     // Jika pengguna mengkonfirmasi, lanjutkan dengan penghapusan
-    //     axios.delete(`http://localhost:50/pemasok?id=${pemasok_id}`)
-    //       .then(response => {
-    //         console.log(response.data); // Menampilkan pesan sukses
-    //         // Menghapus item yang telah dihapus dari array lokal
-    //         this.pemasok.splice(index, 1);
-    //         alert("Data pemasok berhasil dihapus!");
-    //       })
-    //       .catch(error => {
-    //         console.log('Error deleting data:', error);
-    //       });
-    //   } else {
-    //     console.log('Penghapusan dibatalkan');
-    //   }
-    // },
+      if (isConfirmed) {
+        axios.delete(`http://localhost:50/kelola_akun?pengguna_id=${pengguna_id}`)
+          .then(response => {
+            console.log(response.data);
+            this.pengguna.splice(index, 1);
+            alert("Data pengguna berhasil dihapus!");
+          })
+          .catch(error => {
+            console.log('Error deleting data:', error);
+          });
+      } else {
+        console.log('Penghapusan dibatalkan');
+      }
+    },
     onSubmit() {
       this.$router.push('/kelola_akun');
     }
