@@ -409,30 +409,37 @@ def bahan():
         tgl_masuk = request.form.get('tanggal_masuk')
         gambar = request.files.get('gambar_bahan')
 
-        gambar_path = None
+        filename = None  # Untuk menyimpan nama file gambar saja
 
         cursor = mysql.connection.cursor()
 
         if gambar:
-            gambar_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(gambar.filename))
-            gambar.save(gambar_path)
+            # Mengamankan nama file
+            filename = secure_filename(gambar.filename)
+
+            # Simpan file gambar ke folder yang ditentukan
+            gambar.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
             # Hapus gambar lama jika ada
             cursor.execute("SELECT gambar FROM bahan WHERE bahan_id = %s", (bahan_id,))
             existing_gambar = cursor.fetchone()
             if existing_gambar and existing_gambar[0]:
-                os.remove(os.path.join(app.config['UPLOAD_FOLDER'], existing_gambar[0]))
+                old_file_path = os.path.join(app.config['UPLOAD_FOLDER'], existing_gambar[0])
+                if os.path.exists(old_file_path):
+                    os.remove(old_file_path)
 
+        # Perbarui data di database
         sql = """
             UPDATE bahan 
             SET nama_bahan=%s, harga_satuan=%s, stok=%s, satuan=%s, pemasok_id=%s, tanggal_masuk=%s, gambar=%s
             WHERE bahan_id=%s
         """
-        cursor.execute(sql, (nama_bahan, harga_satuan, stok, satuan, pemasok, tgl_masuk, gambar_path, bahan_id))
+        cursor.execute(sql, (nama_bahan, harga_satuan, stok, satuan, pemasok, tgl_masuk, filename, bahan_id))
         mysql.connection.commit()
         cursor.close()
 
         return jsonify({'message': 'Data berhasil diperbarui'})
+
 
     elif request.method == 'DELETE':
         # Menghapus bahan berdasarkan ID
