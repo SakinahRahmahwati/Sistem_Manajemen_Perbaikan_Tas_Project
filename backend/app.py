@@ -1,10 +1,15 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_mysqldb import MySQL
 from flask import request
 from flask_cors import CORS  # Impor CORS
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
+# import bcrypt
 import os
+from functools import wraps
+from werkzeug.security import check_password_hash, generate_password_hash
+import jwt
+from werkzeug.utils import secure_filename
 
 load_dotenv()
 app = Flask(__name__)
@@ -15,9 +20,217 @@ app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST')
 app.config['MYSQL_USER'] = os.getenv('MYSQL_USER')
 app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD')
 app.config['MYSQL_DB'] = os.getenv('MYSQL_DB')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+
 mysql = MySQL(app)
 
+UPLOAD_FOLDER = r'D:\SAKINAH RAHMAHWATI\Semester 5\Proyek praktek\Proyek_Semester5\backend\uploads\images'
+ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+# def hash_password(password):
+#     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+# def verify_password(password, hashed_password):
+#     return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
+
+# Middleware untuk memeriksa peran
+# def role_required(allowed_roles):
+#     def decorator(func):
+#         @wraps(func)
+#         def wrapper(*args, **kwargs):
+#             # Contoh: Ambil role dari header permintaan (bisa disesuaikan dengan token auth)
+#             role = request.headers.get('Role')
+#             if role not in allowed_roles:
+#                 return jsonify({'error': 'Unauthorized access'}), 403
+#             return func(*args, **kwargs)
+#         return wrapper
+#     return decorator
+
+# Login
+@app.route('/login', methods=['POST'])
+def login():
+    if not request.is_json:
+        return jsonify({'error': 'Request must be JSON'}), 400
+
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+
+    if not username or not password:
+        return jsonify({'error': 'Username and password are required'}), 400
+
+    try:
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT pengguna_id, password_hash, role FROM pengguna WHERE username = %s", (username,))
+        user = cursor.fetchone()
+        print("User found:", user)
+
+        if user:
+            # Debug: Print hash dan password
+            print("Hash from database:", user[1])
+            print("Password from input:", password)
+
+            if check_password_hash(user[1], password):
+                print("Password match!")  # Debug: Password cocok
+                # Generate JWT token
+                token = jwt.encode({
+                    'user_id': user[0],
+                    'role': user[2],
+                    'exp': datetime.now(timezone.utc) + timedelta(hours=1)  # Token kadaluarsa dalam 1 jam
+                }, app.config['SECRET_KEY'], algorithm='HS256')
+
+                return jsonify({
+                    'message': 'Login successful',
+                    'token': token,
+                    'role': user[2]
+                }), 200
+            else:
+                print("Password does not match.")  # Debug: Password tidak cocok
+
+        return jsonify({'error': 'Invalid username or password'}), 401
+    except Exception as e:
+        return jsonify({'error': f"Database error: {str(e)}"}), 500
+    finally:
+        cursor.close()
+
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    auth_header = request.headers.get('Authorization')
+    print(f"Authorization header received: {auth_header}")
+
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({'message': 'Invalid or missing token'}), 400
+
+    token = auth_header.split(' ')[1]  # Ambil token setelah 'Bearer'
+    print(f"Token received: {token}")
+
+    return jsonify({'message': 'Logout successful'}), 200
+    
+# Reset Password
+@app.route('/reset-password', methods=['POST'])
+def reset_password():
+    if not request.is_json:
+        return jsonify({'error': 'Request must be JSON'}), 400
+
+    data = request.get_json()
+    username = data.get('username')
+    new_password = data.get('new_password')
+
+    if not username or not new_password:
+        return jsonify({'error': 'Username and new_password are required'}), 400
+
+    # Hash the new password using werkzeug.security
+    password_hash = generate_password_hash(new_password)
+
+    try:
+        cursor = mysql.connection.cursor()
+        cursor.execute("UPDATE pengguna SET password_hash = %s WHERE username = %s", (password_hash, username))
+        mysql.connection.commit()
+
+        return jsonify({'message': 'Password updated successfully'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
+
+# Daftar Pengguna
+@app.route('/daftarpengguna', methods=['GET','POST'])
+def list_pengguna():    
+    if request.method == 'GET':
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT * FROM pengguna")
+        column_names = [i[0] for i in cursor.description]
+        data = []
+        for row in cursor.fetchall():
+            data.append(dict(zip(column_names,row)))
+
+        cursor.close()
+        return jsonify (data)
+
+# Insert Pengguna Baru
+@app.route('/kelola_akun', methods=['POST', 'PUT', 'DELETE'])
+def kelola_akun():
+    if request.method == 'POST':
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')  # Ambil password mentah (plain text)
+        role = data.get('role')
+        nama_pengguna = data.get('nama_pengguna')
+        no_telp = data.get('no_telp')
+
+        # Validasi input
+        if not username or not password or not role:
+            return jsonify({'error': 'Username, password, and role are required'}), 400
+        if role not in ['Admin', 'Kepala Toko', 'Staff']:
+            return jsonify({'error': 'Invalid role'}), 400
+
+        # Periksa apakah username sudah ada
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT * FROM pengguna WHERE username = %s", (username,))
+        existing_user = cursor.fetchone()
+        if existing_user:
+            return jsonify({'error': 'Username already exists'}), 400
+
+        # Hash password sebelum menyimpan
+        hashed_password = generate_password_hash(password)
+
+        cursor.execute("INSERT INTO pengguna (username, password_hash, role, nama_pengguna, no_telp) VALUES (%s, %s, %s, %s, %s)",
+                       (username, hashed_password, role, nama_pengguna, no_telp))
+        mysql.connection.commit()
+        cursor.close()
+        return jsonify({'message': 'Pengguna berhasil ditambahkan'})
+    
+    elif request.method == 'PUT':
+        data = request.get_json()
+        pengguna_id = data.get('pengguna_id')
+        username = data.get('username')
+        password_hash = data.get('password_hash')
+        role = data.get('role')
+
+        # Validasi input
+        if not pengguna_id or not username or not password_hash or not role:
+            return jsonify({'error': 'pengguna_id, username, password_hash, and role are required'}), 400
+        if role not in ['Admin', 'Kepala Toko', 'Staff']:
+            return jsonify({'error': 'Invalid role'}), 400
+
+        # Periksa apakah pengguna ada sebelum update
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT * FROM pengguna WHERE pengguna_id = %s", (pengguna_id,))
+        user = cursor.fetchone()
+        if not user:
+            return jsonify({'error': 'Pengguna tidak ditemukan'}), 404
+
+        cursor.execute("""UPDATE pengguna SET username = %s, password_hash = %s, role = %s
+                          WHERE pengguna_id = %s""", (username, password_hash, role, pengguna_id))
+        mysql.connection.commit()
+        cursor.close()
+        return jsonify({'message': 'Pengguna berhasil diupdate'})
+
+    elif request.method == 'DELETE':
+        pengguna_id = request.args.get('pengguna_id')  # Mengambil ID pengguna dari parameter query string
+
+        # Validasi input
+        if not pengguna_id:
+            return jsonify({'error': 'pengguna_id is required'}), 400
+
+        # Periksa apakah pengguna ada sebelum delete
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT * FROM pengguna WHERE pengguna_id = %s", (pengguna_id,))
+        user = cursor.fetchone()
+        if not user:
+            return jsonify({'error': 'Pengguna tidak ditemukan'}), 404
+
+        cursor.execute("DELETE FROM pengguna WHERE pengguna_id = %s", (pengguna_id,))
+        mysql.connection.commit()
+        cursor.close()
+        return jsonify({'message': 'Pengguna berhasil dihapus'})
 
 @app.route('/dashboard', methods=['GET'])
 def dashboard():
@@ -81,16 +294,32 @@ def bahan_list():
         return jsonify (data)
     
     elif request.method == 'POST':
-        data = request.get_json()
-        nama_bahan = data.get('nama_bahan')
-        harga_satuan = data.get('harga_satuan')
-        satuan = data.get('satuan')
-        stok = data.get('stok')
-        pemasok = data.get('pemasok_id')
-        tgl_masuk = data.get('tanggal_masuk')
+        # Mengambil data dari form
+        nama_bahan = request.form.get('nama_bahan')
+        harga_satuan = request.form.get('harga_satuan')
+        satuan = request.form.get('satuan')
+        stok = request.form.get('stok')
+        pemasok_id = request.form.get('pemasok_id')
+        tanggal_masuk = request.form.get('tanggal_masuk')
 
+        # Validasi file gambar
+        if 'gambar' not in request.files or not request.files['gambar']:
+            return jsonify({'error': 'File gambar harus diunggah'}), 400
+        gambar = request.files['gambar']
+        if not allowed_file(gambar.filename):
+            return jsonify({'error': 'File gambar tidak valid'}), 400
+        
+        # Buat direktori jika belum ada
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+        # Simpan file gambar
+        filename = secure_filename(gambar.filename)
+        gambar.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        gambar_path = filename
+
+        # Validasi pemasok
         cursor = mysql.connection.cursor()
-        cursor.execute("SELECT pemasok_id FROM pemasok WHERE pemasok_id = %s", (pemasok,))
+        cursor.execute("SELECT pemasok_id FROM pemasok WHERE pemasok_id = %s", (pemasok_id,))
         pemasok_exists = cursor.fetchone()
 
         if not pemasok_exists:
@@ -105,11 +334,19 @@ def bahan_list():
         
         # if existing_bahan:
         #     return jsonify({'error': 'Data dengan semua informasi yang sama sudah ada'}), 400
-        sql = "INSERT INTO bahan (nama_bahan, harga_satuan, satuan, stok, pemasok_id, tanggal_masuk) VALUES (%s, %s, %s, %s, %s, %s)"
-        cursor.execute(sql, (nama_bahan, harga_satuan, satuan, stok, pemasok, tgl_masuk))
+        sql = """
+        INSERT INTO bahan (nama_bahan, harga_satuan, satuan, stok, pemasok_id, tanggal_masuk, gambar)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(sql, (nama_bahan, harga_satuan, satuan, stok, pemasok_id, tanggal_masuk, gambar_path))
         mysql.connection.commit()
         cursor.close()
-        return jsonify({'message': 'Data added successfully'})
+
+        return jsonify({'message': 'Data berhasil ditambahkan'}), 201
+
+@app.route('/uploads/images/<filename>')
+def get_image(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/bahan', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def bahan():
@@ -160,27 +397,41 @@ def bahan():
         return jsonify({'message': 'Stok berhasil diperbarui', 'new_stok': new_stok})
 
     elif request.method == 'PUT':
-        data = request.get_json()
         bahan_id = request.args.get('id', type=int)
         if bahan_id is None:
             return jsonify({'error': 'ID bahan tidak ditemukan'}), 400
-        
-        nama_bahan = data.get('nama_bahan')
-        harga_satuan = data.get('harga_satuan')
-        satuan = data.get('satuan')
-        stok = data.get('stok')
-        pemasok = data.get('pemasok_id')
-        tgl_masuk = data.get('tanggal_masuk')
+
+        nama_bahan = request.form.get('nama_bahan')
+        harga_satuan = request.form.get('harga_satuan')
+        satuan = request.form.get('satuan')
+        stok = request.form.get('stok')
+        pemasok = request.form.get('pemasok_id')
+        tgl_masuk = request.form.get('tanggal_masuk')
+        gambar = request.files.get('gambar_bahan')
+
+        gambar_path = None
 
         cursor = mysql.connection.cursor()
+
+        if gambar:
+            gambar_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(gambar.filename))
+            gambar.save(gambar_path)
+
+            # Hapus gambar lama jika ada
+            cursor.execute("SELECT gambar FROM bahan WHERE bahan_id = %s", (bahan_id,))
+            existing_gambar = cursor.fetchone()
+            if existing_gambar and existing_gambar[0]:
+                os.remove(os.path.join(app.config['UPLOAD_FOLDER'], existing_gambar[0]))
+
         sql = """
             UPDATE bahan 
-            SET nama_bahan=%s, harga_satuan=%s, stok=%s, satuan=%s, pemasok_id=%s, tanggal_masuk=%s 
+            SET nama_bahan=%s, harga_satuan=%s, stok=%s, satuan=%s, pemasok_id=%s, tanggal_masuk=%s, gambar=%s
             WHERE bahan_id=%s
         """
-        cursor.execute(sql, (nama_bahan, harga_satuan, stok, satuan, pemasok, tgl_masuk, bahan_id))
+        cursor.execute(sql, (nama_bahan, harga_satuan, stok, satuan, pemasok, tgl_masuk, gambar_path, bahan_id))
         mysql.connection.commit()
         cursor.close()
+
         return jsonify({'message': 'Data berhasil diperbarui'})
 
     elif request.method == 'DELETE':

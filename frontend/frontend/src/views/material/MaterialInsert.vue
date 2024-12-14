@@ -86,6 +86,29 @@
                                 </div>
                             </div>
 
+                            <!-- Gambar Bahan -->
+                            <div class="row">
+                                <div class="col-md-2 pr-1">
+                                    <div class="form-group">
+                                        <label for="gambarBahan">Gambar Bahan</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-10">
+                                    <div class="form-group">
+                                        <input type="file" class="form-control" id="gambarBahan"
+                                            @change="handleFileUpload" accept="image/*">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Preview Gambar -->
+                            <div v-if="previewImage" class="row">
+                                <div class="col-md-12 text-center">
+                                    <img :src="previewImage" alt="Preview Gambar" class="img-thumbnail"
+                                        style="max-width: 200px;">
+                                </div>
+                            </div>
+
                             <!-- tanggal masuk -->
                             <div class="row">
                                 <div class="col-md-2 pr-1">
@@ -122,6 +145,8 @@ export default {
             satuan: '',
             namaPemasok: '',
             tanggalMasuk: '',
+            gambarBahan: null,
+            previewImage: null,
             daftarPemasok: []
         };
     },
@@ -134,48 +159,41 @@ export default {
         getPemasok() {
             axios.get("http://localhost:50/daftarpemasok")
                 .then(response => {
-                    this.daftarPemasok = response.data; // Menyimpan data pemasok dalam daftarPemasok
-                    console.log('Daftar Pemasok:', this.daftarPemasok);
+                    this.daftarPemasok = response.data;
                 })
                 .catch(error => {
-                    console.error("Terjadi kesalahan saat mengambil data pemasok:", error);
+                    console.error("Error:", error);
                 });
         },
-        onSubmit() {
-            const harga = parseFloat(this.hargaBahan);
-            const stokValue = parseInt(this.stok, 10);
-
-            if (this.namaBahan.trim() && !isNaN(harga) && !isNaN(stokValue) && this.satuan.trim() && this.namaPemasok && this.tanggalMasuk) {
-                const dataToSend = {
-                    nama_bahan: this.namaBahan,
-                    harga_satuan: this.hargaBahan,
-                    stok: this.stok,
-                    satuan: this.satuan,
-                    pemasok_id: this.namaPemasok, // Kirim ID pemasok
-                    tanggal_masuk: this.tanggalMasuk,
-                };
-
-                axios.post('http://localhost:50/daftarbahan', dataToSend)
-                    .then(response => {
-                        console.log('Data berhasil dikirim:', response.data);
-                        // Reset form atau lakukan tindakan lain setelah sukses
-                        alert('Data berhasil ditambahkan!');
-                        // Reset form atau melakukan tindakan lainnya
-                        this.namaBahan = '';
-                        this.hargaBahan = '';
-                        this.stok = '';
-                        this.satuan = '';
-                        this.namaPemasok = '';
-                        this.tanggalMasuk = '';
-                        this.$router.push({ name: 'material' });
-                    })
-                    .catch(error => {
-                        console.error('Terjadi kesalahan saat mengirim data:', error);
-                    });
-            } else {
-                alert('Silakan isi semua kolom yang wajib.');
+        handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                this.gambarBahan = file;
+                this.previewImage = URL.createObjectURL(file);
             }
+        },
+        onSubmit() {
+            const formData = new FormData();
+            formData.append('nama_bahan', this.namaBahan);
+            formData.append('harga_satuan', this.hargaBahan);
+            formData.append('stok', this.stok);
+            formData.append('satuan', this.satuan);
+            formData.append('pemasok_id', this.namaPemasok);
+            formData.append('tanggal_masuk', this.tanggalMasuk);
+            formData.append('gambar', this.gambarBahan);
+
+            axios.post('http://localhost:50/daftarbahan', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            })
+                .then(response => {
+                    alert('Data berhasil ditambahkan!');
+                    this.$router.push({ name: 'material' });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.response?.data?.error || 'Terjadi kesalahan.');
+                });
         }
     }
-}
+};
 </script>

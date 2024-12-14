@@ -33,12 +33,13 @@
                     <th>Satuan</th>
                     <th>Pemasok</th>
                     <th>Tanggal Masuk</th>
+                    <th>Gambar</th>
                     <th>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(bahan, index) in bahan" :key="bahan.bahan_id">
-                    <td>{{ index + 1 }}</td> <!-- Menampilkan nomor urut -->
+                  <tr v-for="(bahan, index) in paginatedBahan" :key="bahan.bahan_id">
+                    <td>{{ bahan.no }}</td> <!-- Menampilkan nomor urut -->
                     <td>{{ bahan.nama_bahan }}</td>
                     <td>{{ bahan.harga_satuan }}</td>
                     <td>{{ bahan.stok }}</td>
@@ -48,6 +49,12 @@
                       year:
                         'numeric', month: 'numeric', day: 'numeric'
                     }) : '' }}</td>
+                    <td><template v-if="bahan.gambar">
+                        <img :src="`http://localhost:50/uploads/images/${bahan.gambar}`" alt="Gambar Bahan"
+                          class="img-thumbnail" style="width: 100px; height: 100px;">
+                      </template>
+                      <span v-else>No Image</span>
+                    </td>
                     <td>
                       <button class="btn btn-info btn-fill action-button" @click="openModal(bahan.bahan_id)">+ Tambah
                         Stok</button>
@@ -141,10 +148,12 @@ export default {
       return Math.ceil(this.bahan.length / this.itemsPerPage);
     },
     paginatedBahan() {
-      // Mengambil data untuk halaman saat ini
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
-      return this.bahan.slice(start, end);
+      return this.bahan.slice(start, end).map((bahan, index) => ({
+        ...bahan,
+        no: start + index + 1
+      }));
     },
   },
 
@@ -250,6 +259,9 @@ export default {
       } else {
         console.error('Index tidak valid atau data bahan belum dimuat.');
       }
+    },
+    changePage(page) {
+      this.currentPage = page;
     },
   }
 

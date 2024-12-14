@@ -1,92 +1,196 @@
 <template>
-    <section class="vh-100">
-  <div class="container-fluid h-custom">
-    <div class="row d-flex justify-content-center align-items-center h-100">
-      <div class="col-md-9 col-lg-6 col-xl-5">
-        <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/draw2.webp"
-          class="img-fluid" alt="Sample image">
-      </div>
-      <div class="col-md-8 col-lg-6 col-xl-4 offset-xl-1">
-        <form>
-          <div class="d-flex flex-row align-items-center justify-content-center justify-content-lg-start">
-            <p class="lead fw-normal mb-0 me-3">Sign in with</p>
-            <button  type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-primary btn-floating mx-1">
-              <i class="fab fa-facebook-f"></i>
-            </button>
-
-            <button  type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-primary btn-floating mx-1">
-              <i class="fab fa-twitter"></i>
-            </button>
-
-            <button  type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-primary btn-floating mx-1">
-              <i class="fab fa-linkedin-in"></i>
-            </button>
-          </div>
-
-          <div class="divider d-flex align-items-center my-4">
-            <p class="text-center fw-bold mx-3 mb-0">Or</p>
-          </div>
-
-          <!-- Email input -->
-          <div data-mdb-input-init class="form-outline mb-4">
-            <input type="email" id="form3Example3" class="form-control form-control-lg"
-              placeholder="Enter a valid email address" />
-            <label class="form-label" for="form3Example3">Email address</label>
-          </div>
-
-          <!-- Password input -->
-          <div data-mdb-input-init class="form-outline mb-3">
-            <input type="password" id="form3Example4" class="form-control form-control-lg"
-              placeholder="Enter password" />
-            <label class="form-label" for="form3Example4">Password</label>
-          </div>
-
-          <div class="d-flex justify-content-between align-items-center">
-            <!-- Checkbox -->
-            <div class="form-check mb-0">
-              <input class="form-check-input me-2" type="checkbox" value="" id="form2Example3" />
-              <label class="form-check-label" for="form2Example3">
-                Remember me
-              </label>
+  <div class="login-page">
+    <main class="login-container">
+      <div class="login-card">
+        <div class="login-content">
+          <img src="@/assets/image_inventory.png" alt="Illustration" class="login-illustration" />
+        </div>
+        <div class="login-form">
+          <h2>Form Login</h2>
+          <form @submit.prevent="login">
+            <div class="input-group">
+              <input type="text" placeholder="Username" v-model="username" required />
             </div>
-            <a href="#!" class="text-body">Forgot password?</a>
-          </div>
-
-          <div class="text-center text-lg-start mt-4 pt-2">
-            <button  type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-primary btn-lg"
-              style="padding-left: 2.5rem; padding-right: 2.5rem;">Login</button>
-            <p class="small fw-bold mt-2 pt-1 mb-0">Don't have an account? <a href="#!"
-                class="link-danger">Register</a></p>
-          </div>
-
-        </form>
+            <div class="input-group password-container">
+              <input :type="showPassword ? 'text' : 'password'" placeholder="Password" v-model="password" required />
+              <button type="button" @click="togglePasswordVisibility" class="password-toggle-btn">
+                <i :class="showPassword ? 'fa fa-eye' : 'fa fa-eye-slash'"></i>
+              </button>
+            </div>
+            <button type="submit">Login</button>
+          </form>
+        </div>
       </div>
-    </div>
+    </main>
   </div>
-  <div
-    class="d-flex flex-column flex-md-row text-center text-md-start justify-content-between py-4 px-4 px-xl-5 bg-primary">
-    <!-- Copyright -->
-    <div class="text-white mb-3 mb-md-0">
-      Copyright © 2020. All rights reserved.
-    </div>
-    <!-- Copyright -->
-
-    <!-- Right -->
-    <div>
-      <a href="#!" class="text-white me-4">
-        <i class="fab fa-facebook-f"></i>
-      </a>
-      <a href="#!" class="text-white me-4">
-        <i class="fab fa-twitter"></i>
-      </a>
-      <a href="#!" class="text-white me-4">
-        <i class="fab fa-google"></i>
-      </a>
-      <a href="#!" class="text-white">
-        <i class="fab fa-linkedin-in"></i>
-      </a>
-    </div>
-    <!-- Right -->
-  </div>
-</section>
 </template>
+
+
+<script>
+import axios from 'axios';
+export default {
+  data() {
+    return {
+      username: '',
+      password: '',
+      showPassword: false, // Toggle password visibility
+      errorMessage: '', // Untuk menampilkan pesan error
+    };
+  },
+  methods: {
+    async login() {
+      try {
+        const response = await axios.post('http://127.0.0.1:50/login', {
+          username: this.username,
+          password: this.password,
+        }, {
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (response.status === 200) {
+          const { token, role } = response.data;
+
+          localStorage.setItem('token', token);
+          localStorage.setItem('role', role);
+          alert('Login successful');
+          this.$router.push('/dashboard');
+        }
+      } catch (error) {
+        console.error('Login error:', error.response);
+        const message = error.response?.data?.error || 'An error occurred. Please try again.';
+        alert(message);
+      }
+    },
+    togglePasswordVisibility() {
+      this.showPassword = !this.showPassword;
+    },
+  },
+};
+</script>
+
+
+
+<style scoped>
+/* Struktur Halaman */
+.login-page {
+  font-family: Arial, sans-serif;
+  background-color: #f3f8fc;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Container */
+.login-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-card {
+  display: flex;
+  width: 1000px;
+  height: 600px;
+  background-color: white;
+  border-radius: 15px;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.login-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f9fafb;
+}
+
+.login-illustration {
+  width: 90%;
+}
+
+/* Form */
+.login-form {
+  flex: 1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+h2 {
+  font-size: 32px;
+  color: #333;
+  margin-bottom: 30px;
+}
+
+.input-group {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+input {
+  width: 100%;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 18px;
+}
+
+button {
+  width: 100%;
+  padding: 15px;
+  font-size: 20px;
+  background-color: #ffd600;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  outline: none; 
+}
+
+button:hover {
+  background-color: #ffcb00;
+}
+
+/* Menyesuaikan Kontainer Input Password */
+.password-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  position: relative;
+}
+
+/* Menyesuaikan Styling Input Password */
+.password-container input {
+  padding-right: 40px;
+  /* Memberikan ruang untuk ikon mata */
+}
+
+/* Tombol toggle password (ikon mata) */
+.password-toggle-btn {
+  background: none;
+  border: none;
+  color: #9da0a2;
+  cursor: pointer;
+  font-size: 20px;
+  position: absolute;
+  right: 10px;
+  /* Disesuaikan untuk penataan yang lebih baik */
+  top: 50%;
+  transform: translateY(-50%);
+  /* Menyelaraskan tombol secara vertikal */
+  padding: 0;
+  /* Menghilangkan ruang ekstra di sekitar tombol */
+  height: 20px;
+  /* Menentukan ukuran tombol agar tidak mempengaruhi layout */
+  width: 20px;
+  /* Menentukan ukuran tombol */
+}
+
+button.password-toggle-btn:hover {
+  background-color: transparent;  /* Tombol mata tidak berubah warna saat di-hover */
+}
+</style>

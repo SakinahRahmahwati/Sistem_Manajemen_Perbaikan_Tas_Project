@@ -1,15 +1,15 @@
 <template>
     <nav class="navbar navbar-expand-lg " color-on-scroll="500">
         <div class="container-fluid">
-            <a class="navbar-brand">Sistem Inventaris</a>
+            <a class="navbar-brand">Sistem Manajemen Perbaikan Tas</a>
             <button href="" class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse"
                 aria-controls="navigation-index" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-bar burger-lines"></span>
                 <span class="navbar-toggler-bar burger-lines"></span>
                 <span class="navbar-toggler-bar burger-lines"></span>
             </button>
-            <!-- <div class="collapse navbar-collapse justify-content-end" id="navigation">
-                <ul class="nav navbar-nav mr-auto">
+            <div class="collapse navbar-collapse justify-content-end" id="navigation">
+                <!-- <ul class="nav navbar-nav mr-auto">
                     <li class="nav-item">
                         <a href="#" class="nav-link" data-toggle="dropdown">
                             <i class="nc-icon nc-palette"></i>
@@ -36,9 +36,9 @@
                             <span class="d-lg-block">&nbsp;Search</span>
                         </a>
                     </li>
-                </ul>
+                </ul> -->
                 <ul class="navbar-nav ml-auto">
-                    <li class="nav-item">
+                    <!-- <li class="nav-item">
                         <a class="nav-link" href="#pablo">
                             <span class="no-icon">Account</span>
                         </a>
@@ -56,14 +56,55 @@
                             <div class="divider"></div>
                             <a class="dropdown-item" href="#">Separated link</a>
                         </div>
-                    </li>
+                    </li> -->
                     <li class="nav-item">
-                        <a class="nav-link" href="#pablo">
+                        <a class="nav-link" @click.prevent="logout">
                             <span class="no-icon">Log out</span>
                         </a>
                     </li>
                 </ul>
-            </div> -->
+            </div>
         </div>
     </nav>
 </template>
+
+<script>
+import axios from 'axios';
+
+export default {
+  methods: {
+    logout() {
+      // Konfirmasi logout
+      const confirmLogout = window.confirm('Apakah anda yakin ingin Logout?');
+      if (!confirmLogout) {
+        return; // Jika pengguna batal, tidak melakukan apa-apa
+      }
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('No token found. You are not logged in!');
+        this.$router.push('/login');
+        return;
+      }
+
+      // Mengirim permintaan logout ke server
+      axios.post('http://localhost:50/logout', {}, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        .then(() => {
+          // Menghapus token dan redirect ke halaman login setelah logout sukses
+          localStorage.removeItem('token');
+          alert('Logout successful!');
+          this.$router.push('/login');
+        })
+        .catch((error) => {
+          // Menangani error saat logout
+          console.error('Logout failed:', error.response?.data?.message || error.message);
+          alert('Logout failed, please try again.');
+        });
+    }
+  },
+};
+</script>

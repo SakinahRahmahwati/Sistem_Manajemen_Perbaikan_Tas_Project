@@ -19,30 +19,37 @@
                         <p>Jenis Layanan</p>
                     </router-link>
                 </li>
-                <li class="nav-item" :class="{ active: isActive('/material') }">
+                <li v-if="role === 'Staff'" class="nav-item" :class="{ active: isActive('/material') }">
                     <router-link class="nav-link" to="/material">
                         <i class="bi bi-list-ul"></i>
                         <p>Material</p>
                     </router-link>
                 </li>
-                <li class="nav-item" :class="{ active: isActive('/pelanggan') || isActive('/pelanggan/insert') || isActive('/pelanggan/update') }">
+                <li v-if="role === 'Admin' || role === 'Kepala Toko'" class="nav-item" :class="{ active: isActive('/material') || isActive('/material/insert') }">
+                    <router-link class="nav-link" to="/material">
+                        <i class="bi bi-list-ul"></i>
+                        <p>Material</p>
+                    </router-link>
+                </li>
+                <li class="nav-item"
+                    :class="{ active: isActive('/pelanggan') || isActive('/pelanggan/insert') || isActive('/pelanggan/update') }">
                     <router-link class="nav-link" to="/pelanggan">
                         <i class="bi bi-people-fill"></i>
                         <p>Pelanggan</p>
                     </router-link>
                 </li>
-                <li class="nav-item" :class="{ active: isActive('/pemasok') || isActive('/pemasok/insert') }">
+                <li v-if="role === 'Admin' || role === 'Kepala Toko'" class="nav-item" :class="{ active: isActive('/pemasok') || isActive('/pemasok/insert') }">
                     <router-link class="nav-link" to="/pemasok">
                         <i class="bi bi-boxes"></i>
                         <p>Pemasok</p>
                     </router-link>
                 </li>
                 <li class="nav-item" :class="{ active: isActive('/perbaikan') || isActive('/perbaikan/insert') }">
-                <router-link class="nav-link" to="/perbaikan">
-                    <i class="bi bi-briefcase-fill"></i>
-                    <p>Perbaikan Tas</p>
-                </router-link>
-            </li>
+                    <router-link class="nav-link" to="/perbaikan">
+                        <i class="bi bi-briefcase-fill"></i>
+                        <p>Perbaikan Tas</p>
+                    </router-link>
+                </li>
                 <!-- Dropdown Menu for Perbaikan Tas -->
                 <!-- <li class="nav-item dropdown" :class="{ active: isDropdownActive('/perbaikan') }">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -62,20 +69,23 @@
                         </li>
                     </ul>
                 </li> -->
-                <li class="nav-item" :class="{ active: isActive('/pengeluaran/insert') }">
+                <li v-if="role === 'Admin' || role === 'Kepala Toko'" class="nav-item"
+                    :class="{ active: isActive('/pengeluaran/insert') }">
                     <router-link class="nav-link" to="/pengeluaran/insert">
                         <i class="bi bi-box-arrow-up"></i>
                         <p>Pengeluaran</p>
                     </router-link>
                 </li>
-                <li class="nav-item" :class="{ active: isActive('/laporankeuangan') || isActive('/pengeluaran') }">
+                <li v-if="role === 'Admin' || role === 'Kepala Toko'" class="nav-item"
+                    :class="{ active: isActive('/laporankeuangan') || isActive('/pengeluaran') }">
                     <router-link class="nav-link" to="/laporankeuangan">
                         <i class="bi bi-cash-coin"></i>
                         <p>Laporan Keuangan</p>
                     </router-link>
                 </li>
-                <li class="nav-item" :class="{ active: isActive('') }">
-                    <router-link class="nav-link" to="#">
+                <li v-if="role === 'Admin'" class="nav-item"
+                    :class="{ active: isActive('/daftarpengguna') || isActive('/tambah-pengguna') }">
+                    <router-link class="nav-link" to="/daftarpengguna">
                         <i class="bi bi-person-fill"></i>
                         <p>Akun</p>
                     </router-link>
@@ -95,6 +105,17 @@ export default {
             return this.$route.path.startsWith(baseRoute);
         },
     },
+    props: {
+        role: {
+            type: String,
+            required: true,
+        },
+    },
+    data() {
+        return {
+            isSidebarVisible: true, // Menampilkan sidebar
+        };
+    },
 };
 </script>
 
@@ -103,10 +124,13 @@ export default {
 .nav-item.dropdown .dropdown-menu {
     margin-left: 20px;
     border: none;
-    background-color: #f8f9fa; /* Sesuaikan warna sesuai tema */
+    background-color: #f8f9fa;
+    /* Sesuaikan warna sesuai tema */
 }
+
 .dropdown-item.active {
-    background-color: #e9ecef; /* Warna submenu aktif */
+    background-color: #e9ecef;
+    /* Warna submenu aktif */
     font-weight: bold;
 }
 </style>

@@ -2,8 +2,14 @@
   <div class="content">
     <div class="container-fluid">
       <div style="margin-bottom: 20px;">
-        <button class="btn btn-link" style="color: black;" @click="showUangMasuk">Uang Masuk</button>
-        <button class="btn btn-link" style="color: black;" @click="showUangKeluar">Uang Keluar</button>
+        <button class="btn btn-link" :class="{ active: activeTab === 'uangMasuk' }" style="color: black;"
+          @click="setActiveTab('uangMasuk')">
+          Uang Masuk
+        </button>
+        <button class="btn btn-link" :class="{ active: activeTab === 'uangKeluar' }" style="color: black;"
+          @click="setActiveTab('uangKeluar')">
+          Uang Keluar
+        </button>
       </div>
       <!-- Filter and Search -->
       <div class="d-flex justify-content-between mt-3">
@@ -27,8 +33,8 @@
                     <th>No</th>
                     <th>Tanggal</th>
                     <th>Jenis Pengeluaran</th>
-                    <th>Total Pengeluaran</th>
                     <th>Deskripsi</th>
+                    <th>Total Pengeluaran</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -37,8 +43,8 @@
                     <td>{{ laporan_keuangan.tanggal ? new Date(laporan_keuangan.tanggal).toLocaleDateString('id-ID') :
                       '' }}</td>
                     <td>{{ laporan_keuangan.jenis_pengeluaran }}</td>
+                    <td>{{ laporan_keuangan.keterangan }}</td>
                     <td>{{ formatRupiah(laporan_keuangan.total_pengeluaran) }}</td>
-                    <td>{{laporan_keuangan.keterangan}}</td>
                   </tr>
                 </tbody>
               </table>
@@ -59,7 +65,7 @@
             </nav>
             <!-- Print Button -->
             <div class="d-flex justify-content-start mt-3 mb-3 ml-3">
-              <button class="btn btn-success btn-fill" @click="printTable">Cetak</button>
+              <button class="btn btn-success btn-fill" @click="printTable">Cetak Pdf</button>
             </div>
           </div>
         </div>
@@ -108,6 +114,13 @@
   margin-right: 10px;
 }
 
+.btn-link.active {
+  font-weight: bold;
+  text-decoration: underline;
+  color: blue;
+  /* Warna teks saat aktif */
+}
+
 input[type="date"] {
   width: 180px;
 }
@@ -119,6 +132,7 @@ input[type="text"] {
 
 <script>
 import axios from 'axios';
+import html2pdf from 'html2pdf.js';
 
 export default {
   data() {
@@ -129,6 +143,7 @@ export default {
       itemsPerPage: 10,
       startDate: '',
       endDate: '',
+      activeTab: 'uangKeluar',
       filteredLaporanKeuangan: [],
     };
   },
@@ -152,11 +167,11 @@ export default {
     getLaporanKeuangan() {
       axios.get(this.api)
         .then(response => {
-          console.log('Data response:', response.data);  // Periksa struktur respons
-          const laporanKeuangan = response.data.message; // Jika data berada di dalam 'message'
+          console.log('Data response:', response.data);
+          const laporanKeuangan = response.data.message;
           if (Array.isArray(laporanKeuangan)) {
-            this.laporan_keuangan = laporanKeuangan;
-            this.filteredLaporanKeuangan = laporanKeuangan; // Inisialisasi data yang sudah difilter
+            this.laporan_keuangan = laporanKeuangan.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+            this.filteredLaporanKeuangan = this.laporan_keuangan; // Inisialisasi data yang sudah difilter
           } else {
             console.log('Data tidak berupa array:', laporanKeuangan);
           }
@@ -180,22 +195,60 @@ export default {
       this.filteredLaporanKeuangan = this.laporan_keuangan.filter(item => {
         const itemDate = new Date(item.tanggal).getTime();
         return itemDate >= start && itemDate <= end;
-      });
+      }).sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal)); // Urutkan data hasil filter
 
       this.currentPage = 1; // Reset to the first page
     },
+    setActiveTab(tab) {
+      this.activeTab = tab;
+      if (tab === 'uangMasuk') {
+        this.showUangMasuk();
+      } else if (tab === 'uangKeluar') {
+        this.showUangKeluar();
+      }
+    },
     showUangMasuk() {
+      // Logic for showing "Uang Masuk" data
+      this.$router.push({ path: '/laporankeuangan', replace: true });// Re-fetch data for "Uang Masuk"
+    },
+    showUangKeluar() {
       // Logic for showing "Uang Keluar" data
-      this.$router.push('/laporankeuangan');
+      this.$router.push({ path: '/pengeluaran', replace: true });
     },
     printTable() {
-      const printWindow = window.open('', '', 'width=800,height=600');
-      printWindow.document.write('<html><head><title>Print Laporan</title></head><body>');
-      printWindow.document.write(this.$refs.tableToPrint.innerHTML); // Target the table content
-      printWindow.document.write('</body></html>');
-      printWindow.document.close();
-      printWindow.print();
+      const tableElement = this.$refs.tableToPrint;
+
+      // Hitung total pengeluaran
+      const totalPengeluaran = this.filteredLaporanKeuangan.reduce(
+        (sum, item) => sum + Number(item.total_pengeluaran),
+        0
+      );
+
+      // Tambahkan elemen total ke tabel
+      const totalRow = document.createElement("tr");
+      totalRow.innerHTML = `
+    <td colspan="4" style="font-weight: bold; text-align: right;">Total Uang Keluar:</td>
+    <td><strong>${this.formatRupiah(totalPengeluaran)}</strong></td>
+    <td></td>
+  `;
+      tableElement.querySelector("tbody").appendChild(totalRow);
+
+      // Tunggu rendering selesai
+      this.$nextTick(() => {
+        // Generate PDF
+        const options = {
+          margin: 10,
+          filename: "Laporan_Uang_Keluar.pdf",
+          html2canvas: { scale: 2 },
+          jsPDF: { orientation: "portrait" },
+        };
+        html2pdf().set(options).from(tableElement).save().then(() => {
+          // Hapus elemen total setelah cetak
+          tableElement.querySelector("tbody").removeChild(totalRow);
+        });
+      });
     }
+
   }
 };
 </script>

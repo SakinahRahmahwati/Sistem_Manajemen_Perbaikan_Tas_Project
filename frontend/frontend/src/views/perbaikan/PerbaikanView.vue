@@ -1,8 +1,7 @@
 <template>
   <div class="content">
     <div class="container-fluid">
-      <button class="btn btn-primary btn-fill action-button" @click="onSubmit" style="margin-bottom: 16px;">+ Insert
-        Data</button>
+      <button class="btn btn-primary btn-fill action-button" @click="onSubmit" style="margin-bottom: 16px;">+ Perbaikan Baru</button>
       <div class="row">
         <div class="col-md-12">
           <div class="card strpied-tabled-with-hover">
@@ -172,8 +171,8 @@ export default {
       const payload = { [field]: value };
       try {
         const response = await axios.patch(`${this.apiUpdate}?id=${perbaikan_id}`, payload);
-        console.log(`Status ${field} berhasil diperbarui`, response.data);
-        alert(`Status ${field} berhasil diperbarui`);
+        console.log(`Status berhasil diperbarui`, response.data);
+        alert(`Status berhasil diperbarui`);
       } catch (error) {
         console.error(`Gagal memperbarui ${field}:`, error);
         alert(`Gagal memperbarui ${field}. Silakan coba lagi.`);
