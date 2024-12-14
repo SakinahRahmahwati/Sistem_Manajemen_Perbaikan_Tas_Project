@@ -197,6 +197,13 @@ export default {
             const file = event.target.files[0];
             if (file) {
                 this.edit_gambarBahan = file;
+
+                // Membaca file gambar dan mengubahnya menjadi URL untuk preview
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.edit_gambarBahanURL = e.target.result; // Set URL gambar untuk preview
+                };
+                reader.readAsDataURL(file); // Membaca file sebagai URL data
             }
         },
 
@@ -220,7 +227,7 @@ export default {
             })
                 .then(response => {
                     alert('Data berhasil diperbarui!');
-                    this.getBahan(bahan_id); // Memuat ulang data bahan
+                    this.$router.push({ name: 'material' });
                 })
                 .catch(error => {
                     console.error('Terjadi kesalahan saat memperbarui data:', error);

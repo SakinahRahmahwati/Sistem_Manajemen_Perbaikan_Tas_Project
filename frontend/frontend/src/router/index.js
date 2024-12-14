@@ -18,13 +18,33 @@ import LayananUpdate from '@/views/layanan/LayananUpdate.vue'
 import PerbaikanInsert from '@/views/perbaikan/PerbaikanInsert.vue'
 import PengeluaranInsert from '@/views/pengeluaran/PengeluaranInsert.vue'
 import LaporanUangKeluar from '@/views/laporankeuangan/LaporanUangKeluar.vue'
+import AkunView from '@/views/akun/AkunView.vue'
+import AkunInsert from '@/views/akun/AkunInsert.vue'
+import LandingPage from '@/views/LandingPage.vue'
 
 const routes = [
   {
     path: '/',
+    name: 'LandingPage',
+    component: LandingPage
+  },
+  {
+    path: '/login',
+    name: 'login',
+    component: Login
+  },
+  { path: '/daftarpengguna', 
+    component: AkunView,
+    meta: { requiresAuth: true, role: ['Admin'] },  
+  },
+  { path: '/kelola_akun', 
+    component: AkunInsert,
+    meta: { requiresAuth: true, role: ['Admin'] },   
+  },
+  {
+    path: '/dashboard',
     name: 'dashboard',
     component: DashboardView,
-    alias: '/dashboard'
   },
   {
     path: '/perbaikan',
@@ -35,11 +55,6 @@ const routes = [
     path: '/perbaikan/insert',
     name: 'perbaikanInsert',
     component: PerbaikanInsert
-  },
-  {
-    path: '/login',
-    name: 'login',
-    component: Login
   },
   {
     path: '/material',
@@ -74,22 +89,26 @@ const routes = [
   {
     path: '/pemasok',
     name: 'pemasok',
-    component: Pemasok
+    component: Pemasok,
+    meta: { requiresAuth: true, role: ['Admin', 'Kepala Toko'] }, 
   },
   {
     path: '/pemasok/insert',
     name: 'pemasokInsert',
-    component: PemasokInsert
+    component: PemasokInsert,
+    meta: { requiresAuth: true, role: ['Admin', 'Kepala Toko'] }, 
   },
   {
     path: '/pemasok/:id/edit',
     name: 'pemasokUpdate',
-    component: PemasokUpdate
+    component: PemasokUpdate,
+    meta: { requiresAuth: true, role: ['Admin', 'Kepala Toko'] }, 
   },
   {
     path: '/laporankeuangan',
     name: 'laporankeuangan',
-    component: Laporan
+    component: Laporan,
+    meta: { requiresAuth: true, role: ['Admin', 'Kepala Toko'] }, 
   },
   {
     path: '/jenislayanan',
@@ -109,12 +128,14 @@ const routes = [
   {
     path: '/pengeluaran',
     name: 'pengeluaran',
-    component: LaporanUangKeluar
+    component: LaporanUangKeluar,
+    meta: { requiresAuth: true, role: ['Admin', 'Kepala Toko'] }, 
   },
   {
     path: '/pengeluaran/insert',
     name: 'pengeluaranInsert',
-    component: PengeluaranInsert
+    component: PengeluaranInsert,
+    meta: { requiresAuth: true, role: ['Admin', 'Kepala Toko'] }, 
   },
   {
     path: '/about',
@@ -129,6 +150,29 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes
-})
+});
 
-export default router
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = localStorage.getItem('token');  // Cek apakah ada token
+  const userRole = localStorage.getItem('role');          // Cek peran pengguna
+  
+  // Pengecualian untuk halaman login dan landing page
+  if (to.name === 'login' || to.name === 'LandingPage') {
+    return next();  // Tidak perlu otentikasi untuk halaman ini
+  }
+
+  // Jika halaman memerlukan otentikasi dan pengguna belum login
+  if (!isAuthenticated) {
+    return next({ name: 'login' }); // Redirect ke halaman login jika belum login
+  }
+
+  // Jika halaman memerlukan peran tertentu dan peran pengguna tidak sesuai
+  if (to.meta.role && !to.meta.role.includes(userRole)) {
+    return next({ name: 'LandingPage' }); // Redirect ke halaman landing jika role tidak sesuai
+  }
+
+  // Lanjutkan ke halaman yang diminta jika sudah memenuhi syarat
+  next();
+});
+
+export default router;
