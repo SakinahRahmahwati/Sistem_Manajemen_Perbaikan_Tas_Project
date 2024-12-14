@@ -97,15 +97,15 @@
                                     </div>
                                 </div>
                                 <div class="col-md-10">
-                                    <!-- Tampilkan Gambar Saat Ini -->
-                                    <div class="form-group">
-                                        <img :src="edit_gambarBahanURL" alt="Gambar Bahan" width="200"
-                                            v-if="edit_gambarBahanURL" />
-                                    </div>
                                     <!-- Input File untuk Mengubah Gambar -->
                                     <div class="form-group">
                                         <input type="file" class="form-control" id="edit_gambarBahan"
                                             @change="handleFileUpload" accept="image/*" />
+                                    </div>
+                                    <!-- Tampilkan Gambar Saat Ini -->
+                                    <div class="form-group">
+                                        <img :src="edit_gambarBahanURL" alt="Gambar Bahan" width="200"
+                                            v-if="edit_gambarBahanURL" />
                                     </div>
                                 </div>
                             </div>
@@ -162,12 +162,17 @@ export default {
             axios.get(`http://localhost:50/bahan?id=${id}`)
                 .then(response => {
                     const bahan = response.data[0];
+                    console.log('Bahan:', bahan); // Debugging
                     this.edit_namaBahan = bahan.nama_bahan;
                     this.edit_hargaBahan = bahan.harga_satuan;
                     this.edit_stok = parseInt(bahan.stok, 10);
                     this.edit_satuan = bahan.satuan;
                     this.edit_namaPemasok = bahan.pemasok_id;
-                    this.edit_gambarBahanURL = bahan.gambar_url;
+
+                    // Set URL gambar hanya jika ada
+                    this.edit_gambarBahanURL = bahan.gambar ? `http://localhost:50/uploads/images/${bahan.gambar}` : null;
+
+                    console.log('Gambar URL:', this.edit_gambarBahanURL); // Debugging
 
                     const date = new Date(bahan.tanggal_masuk);
                     const formattedDate = date.toISOString().split('T')[0];
@@ -205,6 +210,7 @@ export default {
             formData.append('pemasok_id', this.edit_namaPemasok);
             formData.append('tanggal_masuk', this.edit_tanggalMasuk);
 
+            // Tambahkan gambar baru jika ada
             if (this.edit_gambarBahan) {
                 formData.append('gambar_bahan', this.edit_gambarBahan);
             }
@@ -214,7 +220,7 @@ export default {
             })
                 .then(response => {
                     alert('Data berhasil diperbarui!');
-                    this.$router.push({ name: 'material' });
+                    this.getBahan(bahan_id); // Memuat ulang data bahan
                 })
                 .catch(error => {
                     console.error('Terjadi kesalahan saat memperbarui data:', error);
