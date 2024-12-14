@@ -409,9 +409,12 @@ def bahan():
         tgl_masuk = request.form.get('tanggal_masuk')
         gambar = request.files.get('gambar_bahan')
 
-        filename = None  # Untuk menyimpan nama file gambar saja
-
         cursor = mysql.connection.cursor()
+
+        # Ambil gambar lama dari database
+        cursor.execute("SELECT gambar FROM bahan WHERE bahan_id = %s", (bahan_id,))
+        existing_gambar = cursor.fetchone()
+        old_filename = existing_gambar[0] if existing_gambar and existing_gambar[0] else None
 
         if gambar:
             # Mengamankan nama file
@@ -421,20 +424,27 @@ def bahan():
             gambar.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
             # Hapus gambar lama jika ada
-            cursor.execute("SELECT gambar FROM bahan WHERE bahan_id = %s", (bahan_id,))
-            existing_gambar = cursor.fetchone()
-            if existing_gambar and existing_gambar[0]:
-                old_file_path = os.path.join(app.config['UPLOAD_FOLDER'], existing_gambar[0])
+            if old_filename:
+                old_file_path = os.path.join(app.config['UPLOAD_FOLDER'], old_filename)
                 if os.path.exists(old_file_path):
                     os.remove(old_file_path)
 
-        # Perbarui data di database
-        sql = """
-            UPDATE bahan 
-            SET nama_bahan=%s, harga_satuan=%s, stok=%s, satuan=%s, pemasok_id=%s, tanggal_masuk=%s, gambar=%s
-            WHERE bahan_id=%s
-        """
-        cursor.execute(sql, (nama_bahan, harga_satuan, stok, satuan, pemasok, tgl_masuk, filename, bahan_id))
+            # Update gambar dengan nama file baru
+            sql = """
+                UPDATE bahan 
+                SET nama_bahan=%s, harga_satuan=%s, stok=%s, satuan=%s, pemasok_id=%s, tanggal_masuk=%s, gambar=%s
+                WHERE bahan_id=%s
+            """
+            cursor.execute(sql, (nama_bahan, harga_satuan, stok, satuan, pemasok, tgl_masuk, filename, bahan_id))
+        else:
+            # Jika tidak ada gambar baru, gunakan gambar lama
+            sql = """
+                UPDATE bahan 
+                SET nama_bahan=%s, harga_satuan=%s, stok=%s, satuan=%s, pemasok_id=%s, tanggal_masuk=%s, gambar=%s
+                WHERE bahan_id=%s
+            """
+            cursor.execute(sql, (nama_bahan, harga_satuan, stok, satuan, pemasok, tgl_masuk, old_filename, bahan_id))
+
         mysql.connection.commit()
         cursor.close()
 
