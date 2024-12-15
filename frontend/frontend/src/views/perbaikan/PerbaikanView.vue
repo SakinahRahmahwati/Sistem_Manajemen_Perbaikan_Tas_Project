@@ -1,7 +1,8 @@
 <template>
   <div class="content">
     <div class="container-fluid">
-      <button class="btn btn-primary btn-fill action-button" @click="onSubmit" style="margin-bottom: 16px;">+ Perbaikan Baru</button>
+      <button class="btn btn-primary btn-fill action-button" @click="onSubmit" style="margin-bottom: 16px;">+ Perbaikan
+        Baru</button>
       <div class="row">
         <div class="col-md-12">
           <div class="card strpied-tabled-with-hover">
@@ -49,8 +50,8 @@
                     </td>
                     <td>
                       <!-- <button class="btn btn-primary btn-fill action-button" style="margin-right: 10px;" @click="detailItem(index)">Detail</button> -->
-                      <button class="btn btn-warning btn-fill action-button"
-                        @click="onUpdate(perbaikan.perbaikan_id)">Edit</button>
+                      <button class="btn btn-info btn-fill action-button"
+                        @click="showDetailPerbaikan(perbaikan.perbaikan_id)">Detail</button>
                       <button class="btn btn-danger btn-fill action-button" @click="onDelete(index)">Hapus</button>
                     </td>
                   </tr>
@@ -73,6 +74,35 @@
             </nav>
           </div>
         </div>
+        <!-- Modal untuk menampilkan detail perbaikan -->
+        <div v-if="showModal" class="modal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2>Detail Perbaikan</h2>
+              <button class="close-button" @click="closeModal" aria-label="Close">
+                <i class="bi bi-x-lg"></i> <!-- Ganti dengan ikon yang Anda inginkan -->
+              </button>
+            </div>
+            <div class="modal-body">
+              <p><strong>Kode Perbaikan:</strong> {{ detailPerbaikan.kode_perbaikan }}</p>
+              <p><strong>Pelanggan:</strong> {{ detailPerbaikan.pelanggan_id }}</p>
+              <p><strong>Tanggal Masuk:</strong> {{ detailPerbaikan.tanggal_masuk }}</p>
+              <p><strong>Tanggal Selesai:</strong> {{ detailPerbaikan.tanggal_selesai }}</p>
+              <p><strong>Status Perbaikan:</strong> {{ detailPerbaikan.status }}</p>
+              <p><strong>Status Pembayaran:</strong> {{ detailPerbaikan.status_pembayaran }}</p>
+              <p><strong>Total Biaya:</strong> {{ formatRupiah(detailPerbaikan.biaya_perbaikan) }}</p>
+              <h3>Layanan yang Dipilih</h3>
+              <ul>
+                <li
+                  v-if="detailPerbaikan.layanan && Array.isArray(detailPerbaikan.layanan) && detailPerbaikan.layanan.length"
+                  v-for="layanan in detailPerbaikan.layanan" :key="layanan.nama_layanan">
+                  {{ layanan.nama_layanan }} (Rp. {{ formatRupiah(layanan.harga) }})
+                </li>
+                <li v-else>Tidak ada layanan yang dipilih.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -92,6 +122,33 @@
 .action-button {
   margin-right: 10px;
 }
+
+.modal {
+  display: block; /* Pastikan modal ditampilkan */
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5); /* Latar belakang transparan */
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto; /* 15% dari atas dan tengah */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%; /* Lebar modal */
+  position: relative; /* Agar tombol close bisa diposisikan */
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between; /* Memastikan header terpisah */
+  align-items: center; /* Vertikal center */
+}
 </style>
 
 <script>
@@ -102,7 +159,9 @@ export default {
     return {
       apiGet: "http://localhost:50/daftarperbaikan", // Endpoint untuk GET data
       apiUpdate: "http://localhost:50/perbaikan", // Endpoint untuk PATCH data
+      showModal: false,
       perbaikan: [],
+      detailPerbaikan: {},
       currentPage: 1,
       itemsPerPage: 10,
     };
@@ -144,11 +203,11 @@ export default {
       this.$router.push("/perbaikan/insert");
     },
 
-    onUpdate(perbaikan_id) {
-      this.$router.push({ name: "perbaikanUpdate", params: { id: perbaikan_id } });
-    },
-	
-	onDelete(index) {
+    // onUpdate(perbaikan_id) {
+    //   this.$router.push({ name: "perbaikanUpdate", params: { id: perbaikan_id } });
+    // },
+
+    onDelete(index) {
       const perbaikan_id = this.perbaikan[index].perbaikan_id;
       const isConfirmed = window.confirm("Apakah Anda yakin ingin menghapus data perbaikan ini?");
 
@@ -183,6 +242,27 @@ export default {
       const number = Number(value);
       if (isNaN(number)) return "-";
       return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(number);
+    },
+
+    showDetailPerbaikan(perbaikan_id) {
+      axios.get(`http://localhost:50/perbaikan?id=${perbaikan_id}`)
+        .then(response => {
+          // Pastikan response.data memiliki struktur yang benar
+          if (response.data) {
+            this.detailPerbaikan = response.data; // Pastikan ini adalah objek yang benar
+            this.showModal = true;
+          } else {
+            console.error('Data tidak ditemukan');
+            alert('Data tidak ditemukan');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Gagal memuat detail perbaikan.');
+        });
+    },
+    closeModal() {
+      this.showModal = false
     },
   },
 };

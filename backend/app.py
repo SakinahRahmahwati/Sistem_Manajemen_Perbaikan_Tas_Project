@@ -1015,23 +1015,43 @@ def perbaikan_list():
 @app.route('/perbaikan', methods=['GET', 'PUT', 'DELETE', 'PATCH'])
 def perbaikan():
     if request.method == 'GET':
-        # Mengambil ID dari query string
-        perbaikan_id = request.args.get('id', type=int)  # Mengambil parameter 'id' dari query string
-        if perbaikan_id is None:
-            return jsonify({'error': 'ID perbaikan tidak ditemukan'}), 400
-        
-        # Menampilkan detail layanan berdasarkan ID
+        perbaikan_id = request.args.get('id')
         cursor = mysql.connection.cursor()
-        cursor.execute("SELECT * FROM layanan WHERE perbaikan_id = %s", (perbaikan_id,))
-        column_names = [i[0] for i in cursor.description]
-        data = []
-        for row in cursor.fetchall():
-            data.append(dict(zip(column_names, row)))
-        cursor.close()
-        if data:
-            return jsonify(data)  # Menampilkan detail layanan jika ditemukan
+        cursor.execute("""
+            SELECT perbaikan.perbaikan_id, 
+            perbaikan.kode_perbaikan, 
+            pelanggan.nama AS nama_pelanggan, 
+            perbaikan.tanggal_masuk, 
+            perbaikan.tanggal_selesai, 
+            perbaikan.status_pembayaran, 
+            perbaikan.biaya_perbaikan, 
+            perbaikan.status, layanan.nama_layanan, layanan_perbaikan.harga 
+            FROM perbaikan 
+            JOIN layanan_perbaikan ON perbaikan.perbaikan_id = layanan_perbaikan.perbaikan_id 
+            JOIN layanan ON layanan_perbaikan.layanan_id = layanan.layanan_id 
+            JOIN pelanggan ON perbaikan.pelanggan_id = pelanggan.pelanggan_id
+            WHERE perbaikan.perbaikan_id = %s
+        """, (perbaikan_id,))
+        perbaikan = cursor.fetchall()
+        if perbaikan:
+            # Ambil data perbaikan dari hasil pertama
+            perbaikan_data = perbaikan[0]
+            return jsonify({
+                'perbaikan_id': perbaikan_data[0],
+                'kode_perbaikan': perbaikan_data[1],
+                'pelanggan_id': perbaikan_data[2],
+                'tanggal_masuk': perbaikan_data[3],
+                'tanggal_selesai': perbaikan_data[4],
+                'status': perbaikan_data[7],
+                'status_pembayaran': perbaikan_data[5],
+                'biaya_perbaikan': perbaikan_data[6],
+                'layanan': [
+                    {'nama_layanan': layanan[8], 'harga': layanan[9]}  # Indeks yang benar
+                    for layanan in perbaikan    # Menggunakan hasil yang sama
+                ]
+            })
         else:
-            return jsonify({'error': 'layanan tidak ditemukan'}), 404
+            return jsonify({'error': 'Perbaikan tidak ditemukan'}), 404
     
     elif request.method == 'PATCH':
         data = request.get_json()
@@ -1065,33 +1085,98 @@ def perbaikan():
         cursor.close()
 
         return jsonify({'message': 'Data perbaikan berhasil diperbarui'})
-
     
-    elif request.method == 'PUT':
-        data = request.get_json()
-        layanan_id = request.args.get('id', type=int)
-        if layanan_id is None:
-            return jsonify({'error': 'ID layanan tidak ditemukan'}), 400
+    # elif request.method == 'PUT':
+    #     data = request.get_json()
+    #     layanan_ids = data.get('layanan_ids')  # List layanan
+    #     pelanggan_id = data.get('pelanggan_id')
+    #     tanggal_masuk = data.get('tanggal_masuk', datetime.now().date())
+    #     tanggal_selesai = data.get('tanggal_selesai')
+    #     status = data.get('status', 'Dalam Antrian')
+    #     status_pembayaran = data.get('status_pembayaran', 'Belum Bayar')
+    #     total_biaya = 0
+
+    #     cursor = mysql.connection.cursor()
+
+    #     # Validasi apakah semua layanan_id ada di tabel layanan dan ambil harga masing-masing
+    #     cursor.execute("""
+    #         SELECT layanan_id, harga 
+    #         FROM layanan 
+    #         WHERE layanan_id IN (%s)
+    #     """ % ','.join(['%s'] * len(layanan_ids)), layanan_ids)
+    #     valid_layanan = cursor.fetchall()
         
-        nama_layanan = data.get('nama_layanan')
-        bahan_id = data.get('bahan_id')
-        harga = data.get('harga')
-        waktu_estimasi = data.get('waktu_estimasi')
-        deskripsi = data.get('deskripsi')
+    #     if len(valid_layanan) != len(layanan_ids):
+    #         return jsonify({'error': 'Salah satu atau lebih layanan tidak ditemukan'}), 404
 
-        # Melakukan update data layanan
-        cursor = mysql.connection.cursor()
-        sql = """
-            UPDATE layanan 
-            SET nama_layanan=%s, bahan_id=%s, harga=%s, waktu_estimasi=%s, deskripsi=%s 
-            WHERE layanan_id=%s
-        """
-        cursor.execute(sql, (nama_layanan, bahan_id, harga, waktu_estimasi, deskripsi, layanan_id))
-        mysql.connection.commit()
-        cursor.close()
-        return jsonify({'message': 'Data layanan berhasil diperbarui'})
+    #     # Hitung total biaya dan simpan harga layanan untuk digunakan nanti
+    #     harga_layanan_map = {}
+    #     for layanan in valid_layanan:
+    #         layanan_id, harga = layanan
+    #         total_biaya += harga
+    #         harga_layanan_map[layanan_id] = harga
 
-    
+    #     # Ambil bahan terkait semua layanan yang dipilih
+    #     cursor.execute("""
+    #         SELECT bahan.bahan_id, bahan.stok, layanan.layanan_id 
+    #         FROM layanan
+    #         JOIN bahan ON layanan.bahan_id = bahan.bahan_id
+    #         WHERE layanan.layanan_id IN (%s)
+    #     """ % ','.join(['%s'] * len(layanan_ids)), layanan_ids)
+    #     bahan_list = cursor.fetchall()
+
+    #     # Periksa stok bahan untuk semua layanan
+    #     for bahan in bahan_list:
+    #         bahan_id, stok, layanan_id = bahan
+    #         if stok < 1:  # Per layanan minimal stok harus ada
+    #             return jsonify({'error': f'Stok bahan untuk layanan {layanan_id} tidak mencukupi'}), 400
+
+    #     # Kurangi stok bahan sesuai kebutuhan
+    #     for bahan in bahan_list:
+    #         bahan_id, stok, layanan_id = bahan
+    #         cursor.execute("""
+    #             UPDATE bahan SET stok = stok - 1 WHERE bahan_id = %s
+    #         """, (bahan_id,))
+
+    #     # Update data perbaikan di tabel `perbaikan`
+    #     sql_perbaikan = """
+    #         UPDATE perbaikan 
+    #         SET pelanggan_id = %s, tanggal_masuk = %s, tanggal_selesai = %s, 
+    #             status = %s, status_pembayaran = %s, biaya_perbaikan = %s
+    #         WHERE id = %s
+    #     """
+    #     cursor.execute(sql_perbaikan, (
+    #         pelanggan_id,
+    #         tanggal_masuk,
+    #         tanggal_selesai,
+    #         status,
+    #         status_pembayaran,
+    #         total_biaya,
+    #         perbaikan_id
+    #     ))
+
+    #     # Hapus layanan_perbaikan yang lama
+    #     cursor.execute("DELETE FROM layanan_perbaikan WHERE perbaikan_id = %s", (perbaikan_id,))
+
+    #     # Simpan data layanan baru ke dalam tabel `layanan_perbaikan`
+    #     sql_layanan_perbaikan = """
+    #         INSERT INTO layanan_perbaikan (perbaikan_id, layanan_id, harga)
+    #         VALUES (%s, %s, %s)
+    #     """
+    #     for layanan_id in layanan_ids:
+    #         harga = harga_layanan_map[layanan_id]
+    #         cursor.execute(sql_layanan_perbaikan, (perbaikan_id, layanan_id, harga))
+
+    #     # Komit semua perubahan
+    #     mysql.connection.commit()
+    #     cursor.close()
+
+    #     return jsonify({
+    #         'message': 'Perbaikan berhasil diperbarui',
+    #         'perbaikan_id': perbaikan_id,
+    #         'total_biaya': total_biaya
+    #     })
+
     elif request.method == 'DELETE':
         perbaikan_id = request.args.get('id', type=int)
         if perbaikan_id is None:
