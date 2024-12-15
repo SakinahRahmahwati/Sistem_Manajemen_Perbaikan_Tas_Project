@@ -17,9 +17,10 @@
           <input type="date" v-model="startDate" class="form-control" @change="filterByDate" />
           <input type="date" v-model="endDate" class="form-control ml-2" @change="filterByDate" />
         </div>
-        <!-- <div>
-          <input type="text" v-model="searchQuery" class="form-control" placeholder="Search..." @input="filterSearch" />
-        </div> -->
+        <div>
+          <input type="text" v-model="searchQuery" class="form-control ml-2" placeholder="Search..."
+            @input="filterSearch" />
+        </div>
       </div>
       <div class="row">
         <div class="col-md-12">
@@ -143,12 +144,13 @@ export default {
       api: 'http://localhost:50/laporanKeuangan', // Endpoint API
       laporan_keuangan: [],
       currentPage: 1,
-      itemsPerPage: 10,
+      itemsPerPage: 20,
       startDate: '',
       endDate: '',
       searchQuery: '',
       activeTab: 'uangMasuk',
       filteredLaporanKeuangan: [],
+      searchQuery: '',
     };
   },
 
@@ -168,6 +170,12 @@ export default {
   },
 
   methods: {
+    filterSearch() {
+      this.filteredLaporanKeuangan = this.laporan_keuangan.filter(item => {
+        return item.kode_perbaikan.toLowerCase().includes(this.searchQuery.toLowerCase());
+      });
+      this.currentPage = 1; // Reset to the first page
+    },
     getLaporanKeuangan() {
       axios.get(this.api)
         .then(response => {
@@ -238,32 +246,32 @@ export default {
       this.$router.push({ path: '/pengeluaran', replace: true });
     },
     calculateTotalUangMasuk() {
-    // Hitung total pendapatan dari data yang sudah difilter
-    return this.filteredLaporanKeuangan.reduce((total, item) => {
-      return total + (Number(item.pendapatan) || 0);
-    }, 0);
-  },
-  printTable() {
-    // Buat elemen baru untuk menyertakan total uang masuk
-    const tableElement = this.$refs.tableToPrint.cloneNode(true); // Salin tabel untuk modifikasi
-    const totalRow = document.createElement('tr');
-    totalRow.innerHTML = `
+      // Hitung total pendapatan dari data yang sudah difilter
+      return this.filteredLaporanKeuangan.reduce((total, item) => {
+        return total + (Number(item.pendapatan) || 0);
+      }, 0);
+    },
+    printTable() {
+      // Buat elemen baru untuk menyertakan total uang masuk
+      const tableElement = this.$refs.tableToPrint.cloneNode(true); // Salin tabel untuk modifikasi
+      const totalRow = document.createElement('tr');
+      totalRow.innerHTML = `
       <td colspan="3" style="font-weight: bold; text-align: right;">Total Uang Masuk:</td>
       <td style="font-weight: bold;">${this.formatRupiah(this.calculateTotalUangMasuk())}</td>
     `;
-    tableElement.querySelector('tbody').appendChild(totalRow); // Tambahkan total ke tabel
+      tableElement.querySelector('tbody').appendChild(totalRow); // Tambahkan total ke tabel
 
-    // Opsi untuk PDF
-    const options = {
-      margin: 10,
-      filename: 'Laporan_Uang_Masuk.pdf',
-      html2canvas: { scale: 2 },
-      jsPDF: { orientation: 'portrait' },
-    };
+      // Opsi untuk PDF
+      const options = {
+        margin: 10,
+        filename: 'Laporan_Uang_Masuk.pdf',
+        html2canvas: { scale: 2 },
+        jsPDF: { orientation: 'portrait' },
+      };
 
-    // Cetak ke PDF
-    html2pdf().set(options).from(tableElement).save();
-  }
+      // Cetak ke PDF
+      html2pdf().set(options).from(tableElement).save();
+    }
   }
 };
 </script>

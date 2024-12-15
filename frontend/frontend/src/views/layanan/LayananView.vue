@@ -1,8 +1,11 @@
 <template>
   <div class="content">
     <div class="container-fluid">
-      <button class="btn btn-primary btn-fill action-button" @click="onSubmit" style="margin-bottom: 16px;">+ Insert
-        Data</button>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <button class="btn btn-primary btn-fill action-button" @click="onSubmit">+ Layanan Baru</button>
+        <input type="text" v-model="searchQuery" class="form-control d-flex w-25" placeholder="Search..."
+          @input="filterSearch" />
+      </div>
       <div class="row">
         <div class="col-md-12">
           <div class="card strpied-tabled-with-hover">
@@ -24,7 +27,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(layanan, index) in layanan" :key="layanan.layanan_id">
+                  <tr v-for="(layanan, index) in paginatedLayanan" :key="layanan.layanan_id">
                     <td>{{ index + 1 }}</td>
                     <td>{{ layanan.nama_layanan }}</td>
                     <td>{{ layanan.nama_bahan }}</td>
@@ -154,20 +157,33 @@ export default {
       showModal: false,
       detailLayanan: {},
       currentPage: 1,
-      itemsPerPage: 10,
+      itemsPerPage: 20,
+      searchQuery: '',
     };
   },
 
   computed: {
+    filteredLayanan() {
+      if (!this.searchQuery) {
+        return this.layanan;
+      }
+      const lowerCaseQuery = this.searchQuery.toLowerCase();
+      return this.layanan.filter(layanan =>
+        layanan.layanan_id.toString().includes(lowerCaseQuery) ||
+        layanan.nama_layanan.toLowerCase().includes(lowerCaseQuery) ||
+        layanan.nama_bahan.toLowerCase().includes(lowerCaseQuery) ||
+        layanan.harga.toString().includes(lowerCaseQuery) ||
+        layanan.waktu_estimasi.toString().includes(lowerCaseQuery) ||
+        layanan.deskripsi.toLowerCase().includes(lowerCaseQuery)
+      );
+    },
     totalPages() {
-      // Menghitung total halaman
-      return Math.ceil(this.layanan.length / this.itemsPerPage);
+      return Math.ceil(this.filteredLayanan.length / this.itemsPerPage);
     },
     paginatedLayanan() {
-      // Mengambil data untuk halaman saat ini
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
-      return this.layanan.slice(start, end);
+      return this.filteredLayanan.slice(start, end);
     },
   },
 
@@ -237,7 +253,10 @@ export default {
         style: 'currency',
         currency: 'IDR'
       }).format(value);
-    }
+    },
+    filterSearch() {
+
+    },
   }
 };
 </script>

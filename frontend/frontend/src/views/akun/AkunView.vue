@@ -1,7 +1,11 @@
 <template>
   <div class="content">
     <div class="container-fluid">
-      <button class="btn btn-primary btn-fill action-button" @click="onSubmit" style="margin-bottom: 16px;">+ Pengguna Baru</button>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <button class="btn btn-primary btn-fill action-button" @click="onSubmit">+ Pengguna Baru</button>
+        <input type="text" v-model="searchQuery" class="form-control d-flex w-25" placeholder="Search..."
+          @input="filterSearch" />
+      </div>
       <div class="row">
         <div class="col-md-12">
           <div class="card strpied-tabled-with-hover">
@@ -21,15 +25,13 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(pengguna, index) in pengguna" :key="pengguna.pengguna_id">
+                  <tr v-for="(pengguna, index) in filteredPengguna" :key="pengguna.pengguna_id">
                     <td>{{ index + 1 }}</td>
                     <td>{{ pengguna.username }}</td>
                     <td>{{ pengguna.nama_pengguna }}</td>
                     <td>{{ pengguna.no_telp }}</td>
                     <td>{{ pengguna.role }}</td>
                     <td>
-                      <!-- <button class="btn btn-primary btn-fill action-button" style="margin-right: 10px;"
-                        @click="detailItem(index)">Detail</button> -->
                       <button class="btn btn-warning btn-fill action-button"
                         @click="onUpdate(pengguna.pengguna_id)">Edit</button>
                       <button class="btn btn-danger btn-fill action-button" @click="onDelete(index)">Hapus</button>
@@ -85,11 +87,24 @@ export default {
       api: 'http://localhost:50/daftarpengguna', // Endpoint API
       pengguna: [],
       currentPage: 1,
-      itemsPerPage: 10,
+      itemsPerPage: 20,
+      searchQuery: '',
     };
   },
 
   computed: {
+    filteredPengguna() {
+      if (!this.searchQuery) {
+        return this.pengguna;
+      }
+      const lowerCaseQuery = this.searchQuery.toLowerCase();
+      return this.pengguna.filter(pengguna =>
+        pengguna.username.toLowerCase().includes(lowerCaseQuery) ||
+        pengguna.nama_pengguna.toLowerCase().includes(lowerCaseQuery) ||
+        pengguna.no_telp.toLowerCase().includes(lowerCaseQuery) ||
+        pengguna.role.toLowerCase().includes(lowerCaseQuery)
+      );
+    },
     totalPages() {
       return Math.ceil(this.pengguna.length / this.itemsPerPage);
     },
@@ -122,9 +137,7 @@ export default {
     },
     onDelete(index) {
       const pengguna_id = this.pengguna[index].pengguna_id;
-
       const isConfirmed = window.confirm("Apakah Anda yakin ingin menghapus data pengguna ini?");
-
       if (isConfirmed) {
         axios.delete(`http://localhost:50/kelola_akun?pengguna_id=${pengguna_id}`)
           .then(response => {
@@ -141,7 +154,10 @@ export default {
     },
     onSubmit() {
       this.$router.push('/kelola_akun');
-    }
+    },
+    filterSearch() {
+    },
   }
+
 };
 </script>
