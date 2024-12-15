@@ -14,8 +14,11 @@
         </button>
       </div>
 
-      <button class="btn btn-primary btn-fill action-button" @click="onSubmit" style="margin-bottom: 16px;">+ Insert
-        Data</button>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <button class="btn btn-primary btn-fill action-button" @click="onSubmit">+ Material Baru</button>
+        <input type="text" v-model="searchQuery" class="form-control d-flex w-25" placeholder="Search..."
+          @input="filterSearch" />
+      </div>
       <div class="row">
         <div class="col-md-12">
           <div class="card strpied-tabled-with-hover">
@@ -90,7 +93,8 @@
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title" id="tambahStokModalLabel">Tambah Stok</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"><i
+                  class="bi bi-x-lg"></i></button>
             </div>
             <div class="modal-body">
               <div class="mb-3">
@@ -135,22 +139,36 @@ export default {
       api: 'http://localhost:50/daftarbahan', // Endpoint API
       bahan: [], // Menyimpan data bahan dalam bentuk array
       currentPage: 1, // Halaman saat ini
-      itemsPerPage: 10, // Jumlah item per halaman
+      itemsPerPage: 20, // Jumlah item per halaman
       stokTambahan: 0, // Jumlah stok tambahan dari input modal
       selectedBahanIndex: null,
       notifications: [],
+      searchQuery: '',
     };
   },
 
   computed: {
+    filteredBahan() {
+      if (!this.searchQuery) {
+        return this.bahan;
+      }
+      const lowerCaseQuery = this.searchQuery.toLowerCase();
+      return this.bahan.filter(bahan =>
+        bahan.nama_bahan.toLowerCase().includes(lowerCaseQuery) ||
+        bahan.harga_satuan.toString().includes(lowerCaseQuery) ||
+        bahan.stok.toString().includes(lowerCaseQuery) ||
+        bahan.satuan.toLowerCase().includes(lowerCaseQuery) ||
+        bahan.nama_pemasok.toLowerCase().includes(lowerCaseQuery) ||
+        (bahan.tanggal_masuk ? new Date(bahan.tanggal_masuk).toLocaleDateString('id-ID').includes(lowerCaseQuery) : false)
+      );
+    },
     totalPages() {
-      // Menghitung total halaman
-      return Math.ceil(this.bahan.length / this.itemsPerPage);
+      return Math.ceil(this.filteredBahan.length / this.itemsPerPage);
     },
     paginatedBahan() {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
-      return this.bahan.slice(start, end).map((bahan, index) => ({
+      return this.filteredBahan.slice(start, end).map((bahan, index) => ({
         ...bahan,
         no: start + index + 1
       }));

@@ -21,6 +21,7 @@ import LaporanUangKeluar from '@/views/laporankeuangan/LaporanUangKeluar.vue'
 import AkunView from '@/views/akun/AkunView.vue'
 import AkunInsert from '@/views/akun/AkunInsert.vue'
 import LandingPage from '@/views/LandingPage.vue'
+import AkunUpdate from '@/views/akun/AkunUpdate.vue'
 
 const routes = [
   {
@@ -33,12 +34,18 @@ const routes = [
     name: 'login',
     component: Login
   },
-  { path: '/daftarpengguna', 
+  { path: '/daftarpengguna',
+    name: 'akunview', 
     component: AkunView,
     meta: { requiresAuth: true, role: ['Admin'] },  
   },
   { path: '/kelola_akun', 
     component: AkunInsert,
+    meta: { requiresAuth: true, role: ['Admin'] },   
+  },
+  { path: '/kelola_akun/:id/edit', 
+    name: 'akunUpdate',
+    component: AkunUpdate,
     meta: { requiresAuth: true, role: ['Admin'] },   
   },
   {

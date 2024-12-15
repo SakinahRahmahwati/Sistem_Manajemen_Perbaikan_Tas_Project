@@ -1,12 +1,54 @@
 <template>
   <div class="dashboard">
-    <div class="chart-container" style="background-color: white;">
-      <canvas id="repairChart" width="600" height="300"></canvas>
-    </div>
     <div class="info-cards">
-      <div class="card">Jumlah Perbaikan: {{ jumlahPerbaikan }}</div>
-      <div class="card">Jumlah Pelanggan: {{ jumlahPelanggan }}</div>
-      <div class="card">Jenis Material: {{ jenisBahan }}</div>
+      <!-- Card 1: Jumlah Perbaikan -->
+      <div class="card">
+        <div class="card-icon">
+          <i class="bi bi-wrench-adjustable-circle"></i>
+        </div>
+        <div class="card-content">
+          <h3>{{ jumlahPerbaikan }}</h3>
+          <p>Jumlah Perbaikan</p>
+        </div>
+      </div>
+
+      <!-- Card 2: Jumlah Pelanggan -->
+      <div class="card">
+        <div class="card-icon">
+          <i class="bi bi-people-fill"></i>
+        </div>
+        <div class="card-content">
+          <h3>{{ jumlahPelanggan }}</h3>
+          <p>Jumlah Pelanggan</p>
+        </div>
+      </div>
+
+      <!-- Card 3: Jenis Material -->
+      <div class="card">
+        <div class="card-icon">
+          <i class="bi bi-stack"></i>
+        </div>
+        <div class="card-content">
+          <h3>{{ jenisBahan }}</h3>
+          <p>Jenis Material</p>
+        </div>
+      </div>
+
+      <!-- Card 4: Jumlah Pemasok -->
+      <div class="card">
+        <div class="card-icon">
+          <i class="bi bi-box-seam-fill"></i>
+        </div>
+        <div class="card-content">
+          <h3>{{ jumlahPemasok }}</h3>
+          <p>Jumlah Pemasok</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Section -->
+    <div class="chart-container">
+      <canvas id="repairChart" width="600" height="150"></canvas>
     </div>
   </div>
 </template>
@@ -17,20 +59,20 @@ import Chart from 'chart.js/auto';
 
 export default {
   setup() {
-    // Define reactive properties
     const jumlahPerbaikan = ref(0);
     const jumlahPelanggan = ref(0);
     const jenisBahan = ref(0);
+    const jumlahPemasok = ref(0);
     const chart = ref({ labels: [], data: [] });
+
     const convertToMonthName = (labels) => {
       return labels.map((label) => {
-        const [year, month] = label.split('-'); // Pisahkan tahun dan bulan
-        const date = new Date(year, month - 1); // Buat objek tanggal (bulan mulai dari 0)
-        return `${date.toLocaleString('id-ID', { month: 'long' })}`; // Format menjadi "Nama Bulan Tahun"
+        const [year, month] = label.split('-');
+        const date = new Date(year, month - 1);
+        return `${date.toLocaleString('id-ID', { month: 'long', year: 'numeric' })}`;
       });
     };
 
-    // Fetch data from the backend API
     const fetchDashboardData = async () => {
       try {
         const response = await fetch('http://127.0.0.1:50/dashboard');
@@ -38,32 +80,24 @@ export default {
           throw new Error(`HTTP Error: ${response.status}`);
         }
         const data = await response.json();
-
-        // Update reactive properties with fetched data
         jumlahPerbaikan.value = data['jumlah Perbaikan'];
         jumlahPelanggan.value = data['jumlah Pelanggan'];
         jenisBahan.value = data['jenis Bahan'];
-
-        // Update chart data with the correct structure
-        chart.value.labels = convertToMonthName(data.chartData.labels); // Ambil labels dari chartData
-        chart.value.data = data.chartData.data; // Ambil data dari chartData
-
-        // Create chart with updated data
+        jumlahPemasok.value = data['jumlah Pemasok'];
+        chart.value.labels = convertToMonthName(data.chartData.labels);
+        chart.value.data = data.chartData.data;
         createChart();
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       }
     };
 
-    // Create a chart using Chart.js
     const createChart = () => {
       const ctx = document.getElementById('repairChart').getContext('2d');
-
       if (!chart.value.labels.length || !chart.value.data.length) {
         console.warn('Chart data or labels are empty.');
-        return; // Jangan buat chart jika tidak ada data
+        return;
       }
-
 
       new Chart(ctx, {
         type: 'bar',
@@ -87,15 +121,8 @@ export default {
             },
           },
           scales: {
-            x: {
-              ticks: {
-                display: true,
-              },
-              beginAtZero: true,
-            },
-            y: {
-              beginAtZero: true,
-            },
+            x: { beginAtZero: true },
+            y: { beginAtZero: true },
           },
           barThickness: 30,
           barPercentage: 0.8,
@@ -103,37 +130,57 @@ export default {
       });
     };
 
-    // Lifecycle hook to fetch data when the component is mounted
-    onMounted(() => {
-      fetchDashboardData();
-    });
+    onMounted(fetchDashboardData);
 
-    return { jumlahPerbaikan, jumlahPelanggan, jenisBahan, chart };
+    return { jumlahPerbaikan, jumlahPelanggan, jenisBahan, jumlahPemasok, chart };
   },
 };
 </script>
 
 <style scoped>
-.chart-container {
-  width: 100%;
-  max-width: 800px;
-  margin: 20px auto;
+.dashboard {
+  padding: 20px;
 }
 
 .info-cards {
   display: flex;
-  justify-content: space-around;
-  margin-top: 30px;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 30px;
 }
 
 .card {
   background-color: #ffffff;
   padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
   text-align: center;
-  font-size: 20px;
-  font-weight: bold;
-  width: 200px;
+  flex: 1;
+  max-width: 300px;
+}
+
+.card-icon {
+  font-size: 30px;
+  color: #4CAF50;
+  margin-bottom: 10px;
+}
+
+.card-content h3 {
+  font-size: 24px;
+  margin: 0;
+  color: #333333;
+}
+
+.card-content p {
+  font-size: 16px;
+  margin: 5px 0 0;
+  color: #777777;
+}
+
+.chart-container {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
 }
 </style>

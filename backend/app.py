@@ -121,10 +121,19 @@ def reset_password():
 
     data = request.get_json()
     username = data.get('username')
+    old_password = data.get('old_password')
     new_password = data.get('new_password')
 
-    if not username or not new_password:
-        return jsonify({'error': 'Username and new_password are required'}), 400
+    if not username or not old_password or not new_password:
+        return jsonify({'error': 'Username, old_password, and new_password are required'}), 400
+    
+    # Cek apakah password lama cocok
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT password_hash FROM pengguna WHERE username = %s", (username,))
+    result = cursor.fetchone()
+
+    if result is None or not check_password_hash(result[0], old_password):
+        return jsonify({'error': 'Old password is incorrect'}), 400
 
     # Hash the new password using werkzeug.security
     password_hash = generate_password_hash(new_password)
@@ -290,6 +299,10 @@ def dashboard():
     cursor.execute('SELECT COUNT(*) FROM bahan')
     jenisBahan = cursor.fetchone()[0]
     
+    # Ambil jumlah pemasok dari tabel 'pemasok'
+    cursor.execute('SELECT COUNT(*) FROM pemasok')
+    jumlahPemasok = cursor.fetchone()[0]
+    
     # Ambil jumlah perbaikan per bulan berdasarkan 'created_at'
     cursor.execute("""
         SELECT DATE_FORMAT(created_at, '%Y-%m') AS month, COUNT(*) 
@@ -311,6 +324,7 @@ def dashboard():
         'jumlah Perbaikan': jumlahPerbaikan,
         'jumlah Pelanggan': jumlahPelanggan,
         'jenis Bahan': jenisBahan,
+        'jumlah Pemasok': jumlahPemasok,
         'chartData': {
             'labels': labels,
             'data': data

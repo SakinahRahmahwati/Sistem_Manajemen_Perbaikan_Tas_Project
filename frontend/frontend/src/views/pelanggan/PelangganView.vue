@@ -1,8 +1,11 @@
 <template>
   <div class="content">
     <div class="container-fluid">
-      <button class="btn btn-primary btn-fill action-button" @click="onSubmit" style="margin-bottom: 16px;">+ Insert
-        Data</button>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <button class="btn btn-primary btn-fill action-button" @click="onSubmit">+ Pelanggan Baru</button>
+        <input type="text" v-model="searchQuery" class="form-control d-flex w-25" placeholder="Search..."
+          @input="filterSearch" />
+      </div>
       <div class="row">
         <div class="col-md-12">
           <div class="card strpied-tabled-with-hover">
@@ -22,7 +25,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(pelanggan, index) in pelanggan" :key="pelanggan.pelanggan_id">
+                  <tr v-for="(pelanggan, index) in paginatedPelanggan" :key="pelanggan.pelanggan_id">
                     <td>{{ index + 1 }}</td>
                     <td>{{ pelanggan.nama }}</td>
                     <td>{{ pelanggan.alamat }}</td>
@@ -145,20 +148,31 @@ export default {
       pelanggan: [],
       namaPelanggan: '',
       currentPage: 1,
-      itemsPerPage: 10,
+      itemsPerPage: 20,
+      searchQuery: '',
     };
   },
 
   computed: {
     totalPages() {
-      // Menghitung total halaman
-      return Math.ceil(this.pelanggan.length / this.itemsPerPage);
+      return Math.ceil(this.filteredPelanggan.length / this.itemsPerPage);
     },
     paginatedPelanggan() {
-      // Mengambil data untuk halaman saat ini
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
-      return this.pelanggan.slice(start, end);
+      return this.filteredPelanggan.slice(start, end);
+    },
+    filteredPelanggan() {
+      if (!this.searchQuery) {
+        return this.pelanggan;
+      }
+      const lowerCaseQuery = this.searchQuery.toLowerCase();
+      return this.pelanggan.filter(pelanggan =>
+        pelanggan.nama.toLowerCase().includes(lowerCaseQuery) ||
+        pelanggan.alamat.toLowerCase().includes(lowerCaseQuery) ||
+        pelanggan.email.toLowerCase().includes(lowerCaseQuery) ||
+        pelanggan.telepon.toLowerCase().includes(lowerCaseQuery)
+      );
     },
   },
 

@@ -1,8 +1,11 @@
 <template>
   <div class="content">
     <div class="container-fluid">
-      <button class="btn btn-primary btn-fill action-button" @click="onSubmit" style="margin-bottom: 16px;">+ Insert
-        Data</button>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <button class="btn btn-primary btn-fill action-button" @click="onSubmit">+ Pemasok Baru</button>
+        <input type="text" v-model="searchQuery" class="form-control d-flex w-25" placeholder="Search..."
+          @input="filterSearch" />
+      </div>
       <div class="row">
         <div class="col-md-12">
           <div class="card strpied-tabled-with-hover">
@@ -22,7 +25,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(pemasok, index) in pemasok" :key="pemasok.pemasok_id">
+                  <tr v-for="(pemasok, index) in paginatedPemasok" :key="pemasok.pemasok_id">
                     <td>{{ index + 1 }}</td>
                     <td>{{ pemasok.nama_pemasok }}</td>
                     <td>{{ pemasok.alamat }}</td>
@@ -86,19 +89,31 @@ export default {
       api: 'http://localhost:50/daftarpemasok', // Endpoint API
       pemasok: [],
       currentPage: 1,
-      itemsPerPage: 10,
+      itemsPerPage: 20,
+      searchQuery: '',
     };
   },
 
   computed: {
     totalPages() {
-      return Math.ceil(this.pemasok.length / this.itemsPerPage);
+      return Math.ceil(this.filteredPemasok.length / this.itemsPerPage);
     },
     paginatedPemasok() {
-      // Mengambil data untuk halaman saat ini
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
-      return this.pemasok.slice(start, end);
+      return this.filteredPemasok.slice(start, end);
+    },
+    filteredPemasok() {
+      if (!this.searchQuery) {
+        return this.pemasok;
+      }
+      const lowerCaseQuery = this.searchQuery.toLowerCase();
+      return this.pemasok.filter(pemasok =>
+        pemasok.nama_pemasok.toLowerCase().includes(lowerCaseQuery) ||
+        pemasok.alamat.toLowerCase().includes(lowerCaseQuery) ||
+        pemasok.email.toLowerCase().includes(lowerCaseQuery) ||
+        pemasok.telepon.toLowerCase().includes(lowerCaseQuery)
+      );
     },
   },
 

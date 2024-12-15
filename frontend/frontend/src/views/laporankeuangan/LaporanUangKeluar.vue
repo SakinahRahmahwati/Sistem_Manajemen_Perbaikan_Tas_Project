@@ -17,6 +17,10 @@
           <input type="date" v-model="startDate" class="form-control" @change="filterByDate" />
           <input type="date" v-model="endDate" class="form-control ml-2" @change="filterByDate" />
         </div>
+        <div>
+          <input type="text" v-model="searchQuery" class="form-control ml-2" placeholder="Search..."
+            @input="filterSearch" />
+        </div>
       </div>
       <div class="row">
         <div class="col-md-12">
@@ -140,15 +144,27 @@ export default {
       api: 'http://localhost:50/pengeluaran', // Endpoint API untuk laporan uang keluar
       laporan_keuangan: [],
       currentPage: 1,
-      itemsPerPage: 10,
+      itemsPerPage: 20,
       startDate: '',
       endDate: '',
       activeTab: 'uangKeluar',
       filteredLaporanKeuangan: [],
+      searchQuery: '',
     };
   },
 
   computed: {
+    filteredLaporanKeuangan() {
+      if (this.searchQuery) {
+        return this.laporan_keuangan.filter(item => {
+          return (
+            item.jenis_pengeluaran.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+            item.keterangan.toLowerCase().includes(this.searchQuery.toLowerCase())
+          );
+        });
+      }
+      return this.laporan_keuangan; // Kembalikan data asli jika tidak ada query pencarian
+    },
     totalPages() {
       return Math.ceil(this.filteredLaporanKeuangan.length / this.itemsPerPage);
     },
@@ -164,6 +180,15 @@ export default {
   },
 
   methods: {
+    filterSearch() {
+      this.filteredLaporanKeuangan = this.laporan_keuangan.filter(item => {
+        return (
+          item.jenis_pengeluaran.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+          item.keterangan.toLowerCase().includes(this.searchQuery.toLowerCase())
+        );
+      }).sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+      this.currentPage = 1; // Reset ke halaman pertama
+    },
     getLaporanKeuangan() {
       axios.get(this.api)
         .then(response => {

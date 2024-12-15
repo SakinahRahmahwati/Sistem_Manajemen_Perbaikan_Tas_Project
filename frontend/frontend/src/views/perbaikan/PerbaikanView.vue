@@ -1,8 +1,11 @@
 <template>
   <div class="content">
     <div class="container-fluid">
-      <button class="btn btn-primary btn-fill action-button" @click="onSubmit" style="margin-bottom: 16px;">+ Perbaikan
-        Baru</button>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <button class="btn btn-primary btn-fill action-button" @click="onSubmit">+ Perbaikan Baru</button>
+        <input type="text" v-model="searchQuery" class="form-control d-flex w-25" placeholder="Search..."
+          @input="filterSearch" />
+      </div>
       <div class="row">
         <div class="col-md-12">
           <div class="card strpied-tabled-with-hover">
@@ -25,7 +28,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(perbaikan, index) in perbaikan" :key="perbaikan.perbaikan_id">
+                  <tr v-for="(perbaikan, index) in paginatedPerbaikan" :key="perbaikan.perbaikan_id">
                     <td>{{ index + 1 }}</td>
                     <td>{{ perbaikan.kode_perbaikan }}</td>
                     <td>{{ perbaikan.nama_pelanggan }}</td>
@@ -124,7 +127,8 @@
 }
 
 .modal {
-  display: block; /* Pastikan modal ditampilkan */
+  display: block;
+  /* Pastikan modal ditampilkan */
   position: fixed;
   z-index: 1000;
   left: 0;
@@ -132,22 +136,28 @@
   width: 100%;
   height: 100%;
   overflow: auto;
-  background-color: rgba(0, 0, 0, 0.5); /* Latar belakang transparan */
+  background-color: rgba(0, 0, 0, 0.5);
+  /* Latar belakang transparan */
 }
 
 .modal-content {
   background-color: #fefefe;
-  margin: 15% auto; /* 15% dari atas dan tengah */
+  margin: 15% auto;
+  /* 15% dari atas dan tengah */
   padding: 20px;
   border: 1px solid #888;
-  width: 80%; /* Lebar modal */
-  position: relative; /* Agar tombol close bisa diposisikan */
+  width: 80%;
+  /* Lebar modal */
+  position: relative;
+  /* Agar tombol close bisa diposisikan */
 }
 
 .modal-header {
   display: flex;
-  justify-content: space-between; /* Memastikan header terpisah */
-  align-items: center; /* Vertikal center */
+  justify-content: space-between;
+  /* Memastikan header terpisah */
+  align-items: center;
+  /* Vertikal center */
 }
 </style>
 
@@ -163,18 +173,32 @@ export default {
       perbaikan: [],
       detailPerbaikan: {},
       currentPage: 1,
-      itemsPerPage: 10,
+      itemsPerPage: 20,
+      searchQuery: '',
     };
   },
 
   computed: {
     totalPages() {
-      return Math.ceil(this.perbaikan.length / this.itemsPerPage);
+      return Math.ceil(this.filteredPerbaikan.length / this.itemsPerPage);
     },
     paginatedPerbaikan() {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
-      return this.perbaikan.slice(start, end);
+      return this.filteredPerbaikan.slice(start, end);
+    },
+    filteredPerbaikan() {
+      if (!this.searchQuery) {
+        return this.perbaikan;
+      }
+      const lowerCaseQuery = this.searchQuery.toLowerCase();
+      return this.perbaikan.filter(perbaikan =>
+        perbaikan.kode_perbaikan.toLowerCase().includes(lowerCaseQuery) ||
+        perbaikan.nama_pelanggan.toLowerCase().includes(lowerCaseQuery) ||
+        perbaikan.notelp.toLowerCase().includes(lowerCaseQuery) ||
+        perbaikan.status.toLowerCase().includes(lowerCaseQuery) ||
+        perbaikan.status_pembayaran.toLowerCase().includes(lowerCaseQuery)
+      );
     },
   },
 
