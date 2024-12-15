@@ -730,18 +730,25 @@ def pelanggan():
         if pelanggan_id is None:
             return jsonify({'error': 'ID pelanggan tidak ditemukan'}), 400
         
-        # Menampilkan detail pelanggan berdasarkan ID
+        # Mengambil riwayat perbaikan berdasarkan ID pelanggan
         cursor = mysql.connection.cursor()
-        cursor.execute("SELECT * FROM pelanggan WHERE pelanggan_id = %s", (pelanggan_id,))
+        cursor.execute("""
+            SELECT rp.*, p.nama AS nama_pelanggan 
+            FROM riwayat_perbaikan rp
+            JOIN pelanggan p ON rp.pelanggan_id = p.pelanggan_id
+            WHERE rp.pelanggan_id = %s
+        """, (pelanggan_id,))
+        
         column_names = [i[0] for i in cursor.description]
         data = []
         for row in cursor.fetchall():
             data.append(dict(zip(column_names, row)))
         cursor.close()
+        
         if data:
-            return jsonify(data)  # Menampilkan detail pelanggan jika ditemukan
+            return jsonify(data)  # Menampilkan riwayat perbaikan jika ditemukan
         else:
-            return jsonify({'error': 'Pelanggan tidak ditemukan'}), 404
+            return jsonify({'error': 'Riwayat perbaikan tidak ditemukan'}), 404
 
     elif request.method == 'PUT':
         # Memperbarui data pelanggan berdasarkan ID

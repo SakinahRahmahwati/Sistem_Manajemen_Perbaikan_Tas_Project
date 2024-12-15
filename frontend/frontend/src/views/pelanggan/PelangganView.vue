@@ -29,8 +29,8 @@
                     <td>{{ pelanggan.email }}</td>
                     <td>{{ pelanggan.telepon }}</td>
                     <td>
-                      <!-- <button class="btn btn-info btn-fill action-button" style="margin-right: 10px;"
-                        @click="detailItem(index)">Detail</button> -->
+                      <button class="btn btn-info btn-fill action-button"
+                        @click="showRiwayat(pelanggan.pelanggan_id, pelanggan.nama)">Riwayat</button>
                       <button class="btn btn-warning btn-fill action-button"
                         @click="onUpdate(pelanggan.pelanggan_id)">Edit</button>
                       <button class="btn btn-danger btn-fill action-button" @click="onDelete(index)">Hapus</button>
@@ -55,6 +55,28 @@
             </nav>
           </div>
         </div>
+        <!-- Modal untuk menampilkan detail perbaikan -->
+        <div v-if="showModal" class="modal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2>Riwayat Perbaikan {{ namaPelanggan }}</h2>
+              <button class="close-button" @click="closeModal" aria-label="Close">
+                <i class="bi bi-x-lg"></i> <!-- Ganti dengan ikon yang Anda inginkan -->
+              </button>
+            </div>
+            <div class="modal-body">
+              <ul>
+                <li v-for="riwayat in riwayatPerbaikan" :key="riwayat.riwayat_perbaikan_id">
+                  <p><strong>Kode Perbaikan:</strong> {{ riwayat.kode_perbaikan }}</p>
+                  <p><strong>Tanggal Perbaikan:</strong> {{ riwayat.tanggal_perbaikan }}</p>
+                  <p><strong>Deskripsi:</strong> {{ riwayat.deskripsi_perbaikan }}</p>
+                  <p><strong>Total Biaya:</strong> {{ formatRupiah(riwayat.total_biaya) }}</p>
+                  <hr />
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <router-view></router-view>
@@ -75,6 +97,40 @@
 .action-button {
   margin-right: 10px;
 }
+
+.modal {
+  display: block;
+  /* Pastikan modal ditampilkan */
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  /* Latar belakang transparan */
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto;
+  /* 15% dari atas dan tengah */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  /* Lebar modal */
+  position: relative;
+  /* Agar tombol close bisa diposisikan */
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  /* Memastikan header terpisah */
+  align-items: center;
+  /* Vertikal center */
+}
 </style>
 
 <script>
@@ -84,7 +140,10 @@ export default {
   data() {
     return {
       api: 'http://localhost:50/daftarpelanggan', // Endpoint API
+      showModal: false,
+      riwayatPerbaikan: [],
       pelanggan: [],
+      namaPelanggan: '',
       currentPage: 1,
       itemsPerPage: 10,
     };
@@ -150,6 +209,32 @@ export default {
     },
     onSubmit() {
       this.$router.push('/pelanggan/insert');
+    },
+    formatRupiah(value) {
+      const number = Number(value);
+      if (isNaN(number)) return "-";
+      return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(number);
+    },
+    showRiwayat(pelanggan_id, nama) {
+      axios.get(`http://localhost:50/pelanggan?id=${pelanggan_id}`)
+        .then(response => {
+          // Pastikan response.data memiliki struktur yang benar
+          if (response.data && Array.isArray(response.data)) {
+            this.riwayatPerbaikan = response.data; // Simpan sebagai array
+            this.namaPelanggan = nama; 
+            this.showModal = true;
+          } else {
+            console.error('Data tidak ditemukan');
+            alert('Data tidak ditemukan');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Gagal memuat detail perbaikan.');
+        });
+    },
+    closeModal() {
+      this.showModal = false;
     }
   }
 };
