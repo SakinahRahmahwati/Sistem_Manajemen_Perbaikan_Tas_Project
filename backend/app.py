@@ -574,7 +574,13 @@ def layanan():
         
         # Menampilkan detail layanan berdasarkan ID
         cursor = mysql.connection.cursor()
-        cursor.execute("SELECT * FROM layanan WHERE layanan_id = %s", (layanan_id,))
+        cursor.execute("""
+        SELECT l.layanan_id, l.nama_layanan, l.harga, l.waktu_estimasi, l.deskripsi, l.gambar,
+               l.bahan_id, b.nama_bahan
+        FROM layanan l
+        LEFT JOIN bahan b ON l.bahan_id = b.bahan_id
+        WHERE l.layanan_id = %s
+    """, (layanan_id,))
         column_names = [i[0] for i in cursor.description]
         data = []
         for row in cursor.fetchall():
@@ -730,8 +736,13 @@ def pelanggan():
         if pelanggan_id is None:
             return jsonify({'error': 'ID pelanggan tidak ditemukan'}), 400
         
-        # Mengambil riwayat perbaikan berdasarkan ID pelanggan
         cursor = mysql.connection.cursor()
+
+        # Mengambil data pelanggan
+        cursor.execute("SELECT pelanggan_id, nama, alamat, telepon, email FROM pelanggan WHERE pelanggan_id = %s", (pelanggan_id,))
+        pelanggan_data = cursor.fetchone()
+
+        # Mengambil riwayat perbaikan
         cursor.execute("""
             SELECT rp.*, p.nama AS nama_pelanggan 
             FROM riwayat_perbaikan rp
@@ -740,15 +751,28 @@ def pelanggan():
         """, (pelanggan_id,))
         
         column_names = [i[0] for i in cursor.description]
-        data = []
+        riwayat_data = []
         for row in cursor.fetchall():
-            data.append(dict(zip(column_names, row)))
+            riwayat_data.append(dict(zip(column_names, row)))
+        
         cursor.close()
         
-        if data:
-            return jsonify(data)  # Menampilkan riwayat perbaikan jika ditemukan
+        if pelanggan_data:
+            # Menggabungkan data pelanggan dan riwayat perbaikan
+            response_data = {
+                'pelanggan': {
+                    'pelanggan_id': pelanggan_data[0],
+                    'nama': pelanggan_data[1],
+                    'alamat': pelanggan_data[2],
+                    'telepon': pelanggan_data[3],
+                    'email': pelanggan_data[4],
+                    # Tambahkan kolom lain yang diperlukan
+                },
+                'riwayat_perbaikan': riwayat_data
+            }
+            return jsonify(response_data)  # Menampilkan data pelanggan dan riwayat perbaikan
         else:
-            return jsonify({'error': 'Riwayat perbaikan tidak ditemukan'}), 404
+            return jsonify({'error': 'Pelanggan tidak ditemukan'}), 404
 
     elif request.method == 'PUT':
         # Memperbarui data pelanggan berdasarkan ID
@@ -1009,6 +1033,29 @@ def perbaikan_list():
             harga = harga_layanan_map[layanan_id]
             cursor.execute(sql_layanan_perbaikan, (perbaikan_id, layanan_id, harga))
 
+        # Simpan data ke tabel riwayat_perbaikan
+        sql_riwayat_perbaikan = """
+            INSERT INTO riwayat_perbaikan (pelanggan_id, kode_perbaikan, tanggal_perbaikan, deskripsi_perbaikan, total_biaya)
+            VALUES (%s, %s, %s, %s, %s)
+        """
+        deskripsi_perbaikan = "Perbaikan baru untuk pelanggan ID {}".format(pelanggan_id)
+        cursor.execute(sql_riwayat_perbaikan, (
+            pelanggan_id,
+            kode_perbaikan,
+            tanggal_selesai,
+            deskripsi_perbaikan,
+            total_biaya
+        ))
+
+        # Ambil riwayat perbaikan untuk pelanggan
+        cursor.execute("""
+            SELECT kode_perbaikan, tanggal_perbaikan, total_biaya 
+            FROM riwayat_perbaikan 
+            WHERE pelanggan_id = %s
+            ORDER BY tanggal_perbaikan DESC
+        """, (pelanggan_id,))
+        riwayat_perbaikan = cursor.fetchall()
+        
         # Komit semua perubahan
         mysql.connection.commit()
         cursor.close()
@@ -1016,7 +1063,8 @@ def perbaikan_list():
         return jsonify({
             'message': 'Perbaikan berhasil ditambahkan',
             'perbaikan_id': perbaikan_id,
-            'total_biaya': total_biaya
+            'total_biaya': total_biaya,
+            'riwayat_perbaikan': riwayat_perbaikan
         })
 
 @app.route('/perbaikan', methods=['GET', 'PUT', 'DELETE', 'PATCH'])

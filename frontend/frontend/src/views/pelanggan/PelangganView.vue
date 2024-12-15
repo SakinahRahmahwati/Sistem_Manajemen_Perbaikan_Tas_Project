@@ -219,9 +219,9 @@ export default {
       axios.get(`http://localhost:50/pelanggan?id=${pelanggan_id}`)
         .then(response => {
           // Pastikan response.data memiliki struktur yang benar
-          if (response.data && Array.isArray(response.data)) {
-            this.riwayatPerbaikan = response.data; // Simpan sebagai array
-            this.namaPelanggan = nama; 
+          if (response.data && response.data.riwayat_perbaikan) {
+            this.riwayatPerbaikan = response.data.riwayat_perbaikan; // Ambil riwayat perbaikan dari respons
+            this.namaPelanggan = nama;
             this.showModal = true;
           } else {
             console.error('Data tidak ditemukan');

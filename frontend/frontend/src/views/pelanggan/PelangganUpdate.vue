@@ -100,12 +100,11 @@ export default {
         getPelanggan(id) {
             axios.get(`http://localhost:50/pelanggan?id=${id}`)
                 .then(response => {
-                    // console.log('Response:', response);
-                    const pelanggan = response.data[0]; // Ambil data pelanggan (asumsikan array)
-                    this.edit_namaPelanggan = pelanggan.nama;
-                    this.edit_alamatPelanggan = pelanggan.alamat;
-                    this.edit_telpPelanggan = pelanggan.telepon;
-                    this.edit_emailPelanggan = pelanggan.email;
+                    const pelanggan = response.data.pelanggan; // Ambil data pelanggan
+                    this.edit_namaPelanggan = pelanggan.nama; // Ambil nama pelanggan
+                    this.edit_alamatPelanggan = pelanggan.alamat; // Ambil alamat
+                    this.edit_telpPelanggan = pelanggan.telepon; // Ambil telepon
+                    this.edit_emailPelanggan = pelanggan.email; // Ambil email
                 })
                 .catch(error => {
                     console.error('Error fetching pelanggan data:', error);
@@ -113,7 +112,7 @@ export default {
         },
 
         onUpdate() {
-            const pelanggan_id = this.$route.params.id; // Mendapatkan ID dari URL
+            const pelanggan_id = this .$route.params.id; // Mendapatkan ID dari URL
             const updatedData = {
                 nama: this.edit_namaPelanggan,
                 alamat: this.edit_alamatPelanggan,
@@ -129,7 +128,6 @@ export default {
                 .then(response => {
                     alert('Data berhasil diperbarui!', response.data);
                     this.$router.push({ name: 'pelanggan' });
-                    // Redirect atau lakukan tindakan lain setelah pembaruan
                 })
                 .catch(error => {
                     console.error('Terjadi kesalahan saat memperbarui data:', error);
