@@ -10,6 +10,10 @@ from functools import wraps
 from werkzeug.security import check_password_hash, generate_password_hash
 import jwt
 from werkzeug.utils import secure_filename
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from model import *
+
 
 load_dotenv()
 app = Flask(__name__)
@@ -21,8 +25,12 @@ app.config['MYSQL_USER'] = os.getenv('MYSQL_USER')
 app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD')
 app.config['MYSQL_DB'] = os.getenv('MYSQL_DB')
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql://{os.getenv('MYSQL_USER')}:{os.getenv('MYSQL_PASSWORD')}@{os.getenv('MYSQL_HOST')}/{os.getenv('MYSQL_DB')}"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 mysql = MySQL(app)
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 UPLOAD_FOLDER = r'D:\SAKINAH RAHMAHWATI\Semester 5\Proyek praktek\Proyek_Semester5\backend\uploads\images'
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png'}
