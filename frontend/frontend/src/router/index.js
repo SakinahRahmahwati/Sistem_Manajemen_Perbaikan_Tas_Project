@@ -1,114 +1,186 @@
-// import Vue from "vue";
-// import VueRouter from "vue-router";
-// import HomeView from "../views/HomeView.vue";
-// import Login from "../views/login.vue";
-// import Dashboard from "@/views/Dashboard.vue";
-
-// Vue.use(VueRouter);
-
-// const routes = [
-//   {
-//     path: "/",
-//     name: "Home",
-//     component: HomeView,
-//   },
-//   {
-//     path: "/about",
-//     name: "about",
-//     // route level code-splitting
-//     // this generates a separate chunk (about.[hash].js) for this route
-//     // which is lazy-loaded when the route is visited.
-//     component: () =>
-//       import(/* webpackChunkName: "about" */ "../views/AboutView.vue"),
-//   },
-//   { path: "/login", name: "login", component: Login },
-//   { path: "/dashboard", name: "DashboardPage", component: Dashboard },
-// ];
-
-// const router = new VueRouter({
-//   mode: "history",
-//   base: process.env.BASE_URL,
-//   routes,
-// });
-
-// export default router;
-import DashboardLayout from "../layout/DashboardLayout.vue";
-// GeneralViews
-import NotFound from "../pages/NotFoundPage.vue";
-
-// Admin pages
-import Overview from "src/pages/Overview.vue";
-import UserProfile from "src/pages/UserProfile.vue";
-import TableList from "src/pages/TableList.vue";
-import Typography from "src/pages/Typography.vue";
-import Icons from "src/pages/Icons.vue";
-import Maps from "src/pages/Maps.vue";
-import Notifications from "src/pages/Notifications.vue";
-import Upgrade from "src/pages/Upgrade.vue";
+import { createRouter, createWebHistory } from 'vue-router'
+import Login from '@/views/LoginView.vue'
+import DashboardView from '@/views/DashboardView.vue'
+import Perbaikan from '@/views/perbaikan/PerbaikanView.vue'
+import Material from '@/views/material/MaterialView.vue'
+import MaterialInsert from '@/views/material/MaterialInsert.vue'
+import MaterialUpdate from '@/views/material/MaterialUpdate.vue'
+import Pelanggan from '@/views/pelanggan/PelangganView.vue'
+import PelangganInsert from '@/views/pelanggan/PelangganInsert.vue'
+import PelangganUpdate from '@/views/pelanggan/PelangganUpdate.vue'
+import Pemasok from '@/views/pemasok/PemasokView.vue'
+import PemasokInsert from '@/views/pemasok/PemasokInsert.vue'
+import PemasokUpdate from '@/views/pemasok/PemasokUpdate.vue'
+import Laporan from '@/views/laporankeuangan/LaporanUangMasuk.vue'
+import Layanan from '@/views/layanan/LayananView.vue'
+import LayananInsert from '@/views/layanan/LayananInsert.vue'
+import LayananUpdate from '@/views/layanan/LayananUpdate.vue'
+import PerbaikanInsert from '@/views/perbaikan/PerbaikanInsert.vue'
+import PengeluaranInsert from '@/views/pengeluaran/PengeluaranInsert.vue'
+import LaporanUangKeluar from '@/views/laporankeuangan/LaporanUangKeluar.vue'
+import AkunView from '@/views/akun/AkunView.vue'
+import AkunInsert from '@/views/akun/AkunInsert.vue'
+import LandingPage from '@/views/LandingPage.vue'
+import AkunUpdate from '@/views/akun/AkunUpdate.vue'
 
 const routes = [
   {
-    path: "/",
-    component: DashboardLayout,
-    redirect: "/admin/overview",
+    path: '/',
+    name: 'LandingPage',
+    component: LandingPage
   },
   {
-    path: "/admin",
-    component: DashboardLayout,
-    redirect: "/admin/overview",
-    children: [
-      {
-        path: "overview",
-        name: "Overview",
-        component: Overview,
-      },
-      {
-        path: "user",
-        name: "User",
-        component: UserProfile,
-      },
-      {
-        path: "table-list",
-        name: "Table List",
-        component: TableList,
-      },
-      {
-        path: "typography",
-        name: "Typography",
-        component: Typography,
-      },
-      {
-        path: "icons",
-        name: "Icons",
-        component: Icons,
-      },
-      {
-        path: "maps",
-        name: "Maps",
-        component: Maps,
-      },
-      {
-        path: "notifications",
-        name: "Notifications",
-        component: Notifications,
-      },
-      {
-        path: "upgrade",
-        name: "Upgrade to PRO",
-        component: Upgrade,
-      },
-    ],
+    path: '/login',
+    name: 'login',
+    component: Login
   },
-  { path: "*", component: NotFound },
-];
+  { path: '/daftarpengguna',
+    name: 'akunview', 
+    component: AkunView,
+    meta: { requiresAuth: true, role: ['Admin'] },  
+  },
+  { path: '/kelola_akun', 
+    name: 'akuninsert', 
+    component: AkunInsert,
+    meta: { requiresAuth: true, role: ['Admin'] },   
+  },
+  { path: '/kelola_akun/:id/edit', 
+    name: 'akunUpdate',
+    component: AkunUpdate,
+    meta: { requiresAuth: true, role: ['Admin'] },   
+  },
+  {
+    path: '/dashboard',
+    name: 'dashboard',
+    component: DashboardView,
+  },
+  {
+    path: '/perbaikan',
+    name: 'perbaikan',
+    component: Perbaikan
+  },
+  {
+    path: '/perbaikan/insert',
+    name: 'perbaikanInsert',
+    component: PerbaikanInsert
+  },
+  {
+    path: '/material',
+    name: 'material',
+    component: Material
+  },
+  {
+    path: '/material/insert',
+    name: 'materialInsert',
+    component: MaterialInsert
+  },
+  {
+    path: '/material/:id/edit',
+    name: 'materialUpdate',
+    component: MaterialUpdate
+  },
+  {
+    path: '/pelanggan',
+    name: 'pelanggan',
+    component: Pelanggan
+  },
+  {
+    path: '/pelanggan/insert',
+    name: 'pelangganInsert',
+    component: PelangganInsert
+  },
+  {
+    path: '/pelanggan/:id/edit',
+    name: 'pelangganUpdate',
+    component: PelangganUpdate
+  },
+  {
+    path: '/pemasok',
+    name: 'pemasok',
+    component: Pemasok,
+    meta: { requiresAuth: true, role: ['Admin', 'Kepala Toko'] }, 
+  },
+  {
+    path: '/pemasok/insert',
+    name: 'pemasokInsert',
+    component: PemasokInsert,
+    meta: { requiresAuth: true, role: ['Admin', 'Kepala Toko'] }, 
+  },
+  {
+    path: '/pemasok/:id/edit',
+    name: 'pemasokUpdate',
+    component: PemasokUpdate,
+    meta: { requiresAuth: true, role: ['Admin', 'Kepala Toko'] }, 
+  },
+  {
+    path: '/laporankeuangan',
+    name: 'laporankeuangan',
+    component: Laporan,
+    meta: { requiresAuth: true, role: ['Admin', 'Kepala Toko'] }, 
+  },
+  {
+    path: '/jenislayanan',
+    name: 'layanan',
+    component: Layanan
+  },
+  {
+    path: '/jenislayanan/insert',
+    name: 'layananInsert',
+    component: LayananInsert
+  },
+  {
+    path: '/jenislayanan/:id/edit',
+    name: 'layananUpdate',
+    component: LayananUpdate
+  },
+  {
+    path: '/pengeluaran',
+    name: 'pengeluaran',
+    component: LaporanUangKeluar,
+    meta: { requiresAuth: true, role: ['Admin', 'Kepala Toko'] }, 
+  },
+  {
+    path: '/pengeluaran/insert',
+    name: 'pengeluaranInsert',
+    component: PengeluaranInsert,
+    meta: { requiresAuth: true, role: ['Admin', 'Kepala Toko'] }, 
+  },
+  {
+    path: '/about',
+    name: 'about',
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue')
+  }
+]
 
-/**
- * Asynchronously load view (Webpack Lazy loading compatible)
- * The specified component must be inside the Views folder
- * @param  {string} name  the filename (basename) of the view to load.
-function view(name) {
-   var res= require('../components/Dashboard/Views/' + name + '.vue');
-   return res;
-};**/
+const router = createRouter({
+  history: createWebHistory(process.env.BASE_URL),
+  routes
+});
 
-export default routes;
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = localStorage.getItem('token');  // Cek apakah ada token
+  const userRole = localStorage.getItem('role');          // Cek peran pengguna
+  
+  // Pengecualian untuk halaman login dan landing page
+  if (to.name === 'login' || to.name === 'LandingPage') {
+    return next();  // Tidak perlu otentikasi untuk halaman ini
+  }
+
+  // Jika halaman memerlukan otentikasi dan pengguna belum login
+  if (!isAuthenticated) {
+    return next({ name: 'login' }); // Redirect ke halaman login jika belum login
+  }
+
+  // Jika halaman memerlukan peran tertentu dan peran pengguna tidak sesuai
+  if (to.meta.role && !to.meta.role.includes(userRole)) {
+    return next({ name: 'LandingPage' }); // Redirect ke halaman landing jika role tidak sesuai
+  }
+
+  // Lanjutkan ke halaman yang diminta jika sudah memenuhi syarat
+  next();
+});
+
+export default router;
