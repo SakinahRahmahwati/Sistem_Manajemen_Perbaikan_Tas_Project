@@ -31,7 +31,7 @@
                                 </div>
                                 <div class="col-md-10">
                                     <div class="form-group">
-                                        <select v-model="pemasokId" class="form-control">
+                                        <select v-model="pemasokId" class="form-control" required>
                                             <option v-for="pemasok in daftarPemasok" :key="pemasok.pemasok_id"
                                                 :value="pemasok.pemasok_id">
                                                 {{ pemasok.nama_pemasok }}
@@ -50,7 +50,7 @@
                                 </div>
                                 <div class="col-md-10">
                                     <div class="form-group">
-                                        <select v-model="bahanId" class="form-control">
+                                        <select v-model="bahanId" class="form-control" required>
                                             <option v-for="bahan in daftarBahan" :key="bahan.bahan_id"
                                                 :value="bahan.bahan_id">
                                                 {{ bahan.nama_bahan }}
@@ -161,14 +161,15 @@ export default {
 
         // Kirim data pengeluaran ke backend
         onSubmit() {
-            if (!this.totalPengeluaran || !this.jenisPengeluaran) {
-                alert("Total Pengeluaran, dan Jenis Pengeluaran harus diisi!");
+            // Pastikan semua field yang wajib diisi ada isinya
+            if (!this.pemasokId || !this.totalPengeluaran || !this.jenisPengeluaran) {
+                alert("Pemasok, Total Pengeluaran, dan Jenis Pengeluaran harus diisi!");
                 return;
             }
 
             const data = {
-                pemasok_id: this.pemasokId || null,
-                bahan_id: this.bahanId || null,
+                pemasok_id: this.pemasokId,
+                bahan_id: this.bahanId,
                 total_pengeluaran: this.totalPengeluaran,
                 tanggal: this.tanggalPengeluaran,
                 keterangan: this.keterangan,
@@ -181,11 +182,11 @@ export default {
                     console.log(response.data);
                     // Reset form atau melakukan tindakan lainnya
                     this.pemasokId = '';
-                    this.bahanId = '';
-                    this.totalPengeluaran = '';
-                    this.tanggalPengeluaran = '';
-                    this.keterangan = '';
-                    this.jenisPengeluaran = '';
+                        this.bahanId = '';
+                        this.totalPengeluaran = '';
+                        this.tanggalPengeluaran = '';
+                        this.keterangan = '';
+                        this.jenisPengeluaran = '';
                 })
                 .catch(error => {
                     console.error("Terjadi kesalahan saat mengirim data:", error);

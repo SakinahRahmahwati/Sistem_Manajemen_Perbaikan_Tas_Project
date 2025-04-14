@@ -299,9 +299,9 @@ def dashboard():
     cursor.execute('SELECT COUNT(*) FROM bahan')
     jenisBahan = cursor.fetchone()[0]
     
-    # Ambil jumlah layanan dari tabel 'layanan'
-    cursor.execute('SELECT COUNT(*) FROM layanan')
-    jumlahLayanan = cursor.fetchone()[0]
+    # Ambil jumlah pemasok dari tabel 'pemasok'
+    cursor.execute('SELECT COUNT(*) FROM pemasok')
+    jumlahPemasok = cursor.fetchone()[0]
     
     # Ambil jumlah perbaikan per bulan berdasarkan 'created_at'
     cursor.execute("""
@@ -324,7 +324,7 @@ def dashboard():
         'jumlah Perbaikan': jumlahPerbaikan,
         'jumlah Pelanggan': jumlahPelanggan,
         'jenis Bahan': jenisBahan,
-        'jumlah Pemasok': jumlahLayanan,
+        'jumlah Pemasok': jumlahPemasok,
         'chartData': {
             'labels': labels,
             'data': data
@@ -505,6 +505,7 @@ def bahan():
 
         return jsonify({'message': 'Data berhasil diperbarui'})
 
+
     elif request.method == 'DELETE':
         # Menghapus bahan berdasarkan ID
         bahan_id = request.args.get('id', type=int)  # Mengambil parameter 'id' dari query string
@@ -512,21 +513,11 @@ def bahan():
             return jsonify({'error': 'ID bahan tidak diberikan'}), 400
         
         cursor = mysql.connection.cursor()
-        
-        # Validasi apakah bahan_id ada di tabel
-        cursor.execute("SELECT COUNT(*) FROM bahan WHERE bahan_id = %s", (bahan_id,))
-        count = cursor.fetchone()[0]
-        if count == 0:
-            return jsonify({'error': 'ID bahan tidak ditemukan'}), 404
-        
-        # Menghapus data
         sql = "DELETE FROM bahan WHERE bahan_id = %s"
         cursor.execute(sql, (bahan_id,))
         mysql.connection.commit()
         cursor.close()
-        
         return jsonify({'message': 'Data deleted successfully'})
-
 
 @app.route('/daftarlayanan', methods=['GET','POST'])
 def layanan_list():
@@ -1315,16 +1306,16 @@ def pengeluaran():
         data = request.get_json()
 
         # Mendapatkan data dari request
-        pemasok_id = data.get('pemasok_id', None)
-        bahan_id = data.get('bahan_id', None)
+        pemasok_id = data.get('pemasok_id')
+        bahan_id = data.get('bahan_id')
         total_pengeluaran = data.get('total_pengeluaran')
         tanggal = data.get('tanggal')
         keterangan = data.get('keterangan')
         jenis_pengeluaran = data.get('jenis_pengeluaran')
 
         # Validasi input (misalnya, memastikan tidak ada nilai kosong untuk field penting)
-        if not total_pengeluaran or not jenis_pengeluaran:
-            return jsonify({'error': 'Total Pengeluaran, dan Jenis Pengeluaran harus diisi'}), 400
+        if not pemasok_id or not total_pengeluaran or not jenis_pengeluaran:
+            return jsonify({'error': 'Pemasok ID, Total Pengeluaran, dan Jenis Pengeluaran harus diisi'}), 400
 
         cursor = mysql.connection.cursor()
         

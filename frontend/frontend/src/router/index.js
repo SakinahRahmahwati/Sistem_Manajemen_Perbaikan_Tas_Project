@@ -40,7 +40,6 @@ const routes = [
     meta: { requiresAuth: true, role: ['Admin'] },  
   },
   { path: '/kelola_akun', 
-    name: 'akuninsert', 
     component: AkunInsert,
     meta: { requiresAuth: true, role: ['Admin'] },   
   },

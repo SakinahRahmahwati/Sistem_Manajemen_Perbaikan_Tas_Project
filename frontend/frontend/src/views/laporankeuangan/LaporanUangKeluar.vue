@@ -154,17 +154,17 @@ export default {
   },
 
   computed: {
-    // filteredLaporanKeuangan() {
-    //   if (this.searchQuery) {
-    //     return this.laporan_keuangan.filter(item => {
-    //       return (
-    //         item.jenis_pengeluaran.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-    //         item.keterangan.toLowerCase().includes(this.searchQuery.toLowerCase())
-    //       );
-    //     });
-    //   }
-    //   return this.laporan_keuangan; // Kembalikan data asli jika tidak ada query pencarian
-    // },
+    filteredLaporanKeuangan() {
+      if (this.searchQuery) {
+        return this.laporan_keuangan.filter(item => {
+          return (
+            item.jenis_pengeluaran.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+            item.keterangan.toLowerCase().includes(this.searchQuery.toLowerCase())
+          );
+        });
+      }
+      return this.laporan_keuangan; // Kembalikan data asli jika tidak ada query pencarian
+    },
     totalPages() {
       return Math.ceil(this.filteredLaporanKeuangan.length / this.itemsPerPage);
     },

@@ -13,32 +13,32 @@
                         <p>Dashboard</p>
                     </router-link>
                 </li>
-                <li class="nav-item" :class="{ active: ['layanan', 'layananInsert', 'layananUpdate'].includes($route.name)  }">
+                <li class="nav-item" :class="{ active: isActive('/jenislayanan') }">
                     <router-link class="nav-link" to="/jenislayanan">
                         <i class="bi bi-gear"></i>
                         <p>Jenis Layanan</p>
                     </router-link>
                 </li>
-                <li v-if="role === 'Staff'" class="nav-item" :class="{ active: ['material', 'materialInsert', 'materialUpdate'].includes($route.name) }">
+                <li v-if="role === 'Staff'" class="nav-item" :class="{ active: isActive('/material') }">
                     <router-link class="nav-link" to="/material">
                         <i class="bi bi-list-ul"></i>
                         <p>Material</p>
                     </router-link>
                 </li>
-                <li v-if="role === 'Admin' || role === 'Kepala Toko'" class="nav-item" :class="{ active: ['material', 'materialInsert', 'materialUpdate'].includes($route.name) }">
+                <li v-if="role === 'Admin' || role === 'Kepala Toko'" class="nav-item" :class="{ active: isActive('/material') || isActive('/material/insert') }">
                     <router-link class="nav-link" to="/material">
                         <i class="bi bi-list-ul"></i>
                         <p>Material</p>
                     </router-link>
                 </li>
                 <li class="nav-item"
-                    :class="{ active: ['pelanggan', 'pelangganInsert', 'pelangganUpdate'].includes($route.name) }">
+                    :class="{ active: isActive('/pelanggan') || isActive('/pelanggan/insert') || isActive('/pelanggan/update') }">
                     <router-link class="nav-link" to="/pelanggan">
                         <i class="bi bi-people-fill"></i>
                         <p>Pelanggan</p>
                     </router-link>
                 </li>
-                <li v-if="role === 'Admin' || role === 'Kepala Toko'" class="nav-item" :class="{ active: ['pemasok', 'pemasokInsert', 'pemasokUpdate'].includes($route.name) }">
+                <li v-if="role === 'Admin' || role === 'Kepala Toko'" class="nav-item" :class="{ active: isActive('/pemasok') || isActive('/pemasok/insert') }">
                     <router-link class="nav-link" to="/pemasok">
                         <i class="bi bi-boxes"></i>
                         <p>Pemasok</p>
@@ -84,10 +84,10 @@
                     </router-link>
                 </li>
                 <li v-if="role === 'Admin'" class="nav-item"
-                    :class="{ active: ['akunview', 'akuninsert', 'akunUpdate'].includes($route.name) }">
+                    :class="{ active: isActive('/daftarpengguna') || isActive('/tambah-pengguna') }">
                     <router-link class="nav-link" to="/daftarpengguna">
                         <i class="bi bi-person-fill"></i>
-                        <p>Kelola Akun</p>
+                        <p>Akun</p>
                     </router-link>
                 </li>
             </ul>

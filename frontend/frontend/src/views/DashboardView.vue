@@ -4,7 +4,7 @@
       <!-- Card 1: Jumlah Perbaikan -->
       <div class="card">
         <div class="card-icon">
-          <i class="bi bi-luggage-fill"></i>
+          <i class="bi bi-wrench-adjustable-circle"></i>
         </div>
         <div class="card-content">
           <h3>{{ jumlahPerbaikan }}</h3>
@@ -34,14 +34,14 @@
         </div>
       </div>
 
-      <!-- Card 4: Jumlah Layanan -->
+      <!-- Card 4: Jumlah Pemasok -->
       <div class="card">
         <div class="card-icon">
-          <i class="bi bi-wrench-adjustable-circle"></i>
+          <i class="bi bi-box-seam-fill"></i>
         </div>
         <div class="card-content">
-          <h3>{{ jumlahLayanan }}</h3>
-          <p>Jumlah Layanan</p>
+          <h3>{{ jumlahPemasok }}</h3>
+          <p>Jumlah Pemasok</p>
         </div>
       </div>
     </div>
@@ -62,7 +62,7 @@ export default {
     const jumlahPerbaikan = ref(0);
     const jumlahPelanggan = ref(0);
     const jenisBahan = ref(0);
-    const jumlahLayanan = ref(0);
+    const jumlahPemasok = ref(0);
     const chart = ref({ labels: [], data: [] });
 
     const convertToMonthName = (labels) => {
@@ -83,7 +83,7 @@ export default {
         jumlahPerbaikan.value = data['jumlah Perbaikan'];
         jumlahPelanggan.value = data['jumlah Pelanggan'];
         jenisBahan.value = data['jenis Bahan'];
-        jumlahLayanan.value = data['jumlah Pemasok'];
+        jumlahPemasok.value = data['jumlah Pemasok'];
         chart.value.labels = convertToMonthName(data.chartData.labels);
         chart.value.data = data.chartData.data;
         createChart();
@@ -132,7 +132,7 @@ export default {
 
     onMounted(fetchDashboardData);
 
-    return { jumlahPerbaikan, jumlahPelanggan, jenisBahan, jumlahLayanan, chart };
+    return { jumlahPerbaikan, jumlahPelanggan, jenisBahan, jumlahPemasok, chart };
   },
 };
 </script>

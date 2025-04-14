@@ -24,7 +24,7 @@
                                 <div class="col-md-2 pr-1">
                                     <label for="pelanggan_id">Nama Pelanggan</label>
                                 </div>
-                                <div class="col-md-9">
+                                <div class="col-md-10">
                                     <select class="form-control" v-model="formData.pelanggan_id" id="pelanggan_id"
                                         required>
                                         <option value="" disabled>Pilih Pelanggan</option>
@@ -34,12 +34,6 @@
                                         </option>
                                     </select>
                                 </div>
-                                <div class="col-md-1">
-                                    <button class="btn btn-primary btn-fill" @click="tambahPelanggan">
-                                        <i class="nc-icon nc-simple-add"></i>
-                                    </button>
-                                </div>
-
                             </div>
 
                             <!-- Jenis Perbaikan -->
@@ -235,9 +229,6 @@ export default {
                 statusPembayaran: '',
                 jenisPerbaikanList: [{ layanan_id: '', harga: '' }]
             };
-        },
-        tambahPelanggan() {
-            this.$router.push({ name: 'pelangganInsert' });
         }
     }
 };
