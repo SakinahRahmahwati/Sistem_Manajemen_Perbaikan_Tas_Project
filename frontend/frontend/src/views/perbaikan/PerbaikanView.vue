@@ -96,13 +96,17 @@
               <p><strong>Total Biaya:</strong> {{ formatRupiah(detailPerbaikan.biaya_perbaikan) }}</p>
               <h3>Layanan yang Dipilih</h3>
               <ul>
-                <li
-                  v-if="detailPerbaikan.layanan && Array.isArray(detailPerbaikan.layanan) && detailPerbaikan.layanan.length"
-                  v-for="layanan in detailPerbaikan.layanan" :key="layanan.nama_layanan">
-                  {{ layanan.nama_layanan }} (Rp. {{ formatRupiah(layanan.harga) }})
-                </li>
-                <li v-else>Tidak ada layanan yang dipilih.</li>
+                <template
+                  v-if="detailPerbaikan.layanan && Array.isArray(detailPerbaikan.layanan) && detailPerbaikan.layanan.length">
+                  <li v-for="layanan in detailPerbaikan.layanan" :key="layanan.nama_layanan">
+                    {{ layanan.nama_layanan }} (Rp. {{ formatRupiah(layanan.harga) }})
+                  </li>
+                </template>
+                <template v-else>
+                  <li>Tidak ada layanan yang dipilih.</li>
+                </template>
               </ul>
+
             </div>
           </div>
         </div>

@@ -18,6 +18,7 @@
                   <tr>
                     <th>No</th>
                     <th>Nama Pemasok</th>
+                    <th>Kode Pemasok</th>
                     <th>Alamat</th>
                     <th>Email</th>
                     <th>No Telp</th>
@@ -28,6 +29,7 @@
                   <tr v-for="(pemasok, index) in paginatedPemasok" :key="pemasok.pemasok_id">
                     <td>{{ index + 1 }}</td>
                     <td>{{ pemasok.nama_pemasok }}</td>
+                    <td>{{ pemasok.kode_pemasok }}</td>
                     <td>{{ pemasok.alamat }}</td>
                     <td>{{ pemasok.email }}</td>
                     <td>{{ pemasok.telepon }}</td>

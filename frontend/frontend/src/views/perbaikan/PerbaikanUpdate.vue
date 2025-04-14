@@ -4,7 +4,7 @@
             <div class="row">
                 <div class="card" style="width: 80%;">
                     <div class="card-header">
-                        <h4 class="card-title">Perbaikan Baru</h4>
+                        <h4 class="card-title">Edit Perbaikan</h4>
                     </div>
                     <div class="card-body">
                         <form @submit.prevent="onSubmit">
@@ -24,7 +24,7 @@
                                 <div class="col-md-2 pr-1">
                                     <label for="pelanggan_id">Nama Pelanggan</label>
                                 </div>
-                                <div class="col-md-9">
+                                <div class="col-md-10">
                                     <select class="form-control" v-model="formData.pelanggan_id" id="pelanggan_id"
                                         required>
                                         <option value="" disabled>Pilih Pelanggan</option>
@@ -34,12 +34,6 @@
                                         </option>
                                     </select>
                                 </div>
-                                <div class="col-md-1">
-                                    <button class="btn btn-primary btn-fill" @click="tambahPelanggan">
-                                        <i class="nc-icon nc-simple-add"></i>
-                                    </button>
-                                </div>
-
                             </div>
 
                             <!-- Jenis Perbaikan -->
@@ -131,7 +125,9 @@
                             </div>
 
                             <!-- Tombol Submit -->
-                            <button type="submit" class="btn btn-primary btn-fill pull-right">Submit</button>
+                            <button type="submit" class="btn btn-primary btn-fill pull-right">
+                                Update
+                            </button>
                             <div class="clearfix"></div>
                         </form>
                     </div>
@@ -148,6 +144,7 @@ export default {
     data() {
         return {
             kodePerbaikan: '',
+            isEdit: true,
             formData: {
                 pelanggan_id: '',
                 tanggalMasuk: '',
@@ -162,7 +159,7 @@ export default {
     mounted() {
         this.getPelanggan();
         this.getLayanan();
-        this.kodePerbaikan = this.generateKodePerbaikan();
+        this.getPerbaikan(this.$route.params.perbaikan_id);
     },
     computed: {
         totalBiaya() {
@@ -180,21 +177,21 @@ export default {
                 .then(response => this.daftarLayanan = response.data)
                 .catch(error => console.error('Error:', error));
         },
-        generateKodePerbaikan() {
-            const now = new Date();
-            const dateStr = now.getFullYear() +
-                String(now.getMonth() + 1).padStart(2, '0') +
-                String(now.getDate()).padStart(2, '0'); // Format YYYYMMDD
-
-            // Ambil jam, menit, dan detik
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-
-            // Gabungkan jam, menit, dan detik menjadi HHMMSS
-            const timeStr = hours + minutes + seconds;
-
-            return `P${dateStr}${timeStr}`;
+        getPerbaikan(perbaikan_id) {
+            axios.get(`http://localhost:50/perbaikan/${perbaikan_id}`)
+                .then(response => {
+                    const data = response.data;
+                    this.kodePerbaikan = data.kode_perbaikan;
+                    this.formData.pelanggan_id = data.pelanggan_id;
+                    this.formData.tanggalMasuk = data.tanggal_masuk;
+                    this.formData.tanggalKeluar = data.tanggal_selesai;
+                    this.formData.statusPembayaran = data.status_pembayaran;
+                    this.formData.jenisPerbaikanList = data.layanan.map(layanan => ({
+                        layanan_id: layanan.layanan_id,
+                        harga: layanan.harga
+                    }));
+                })
+                .catch(error => console.error('Error:', error));
         },
         updateHarga(index) {
             const selectedLayanan = this.daftarLayanan.find(
@@ -212,32 +209,19 @@ export default {
             const payload = {
                 kode_perbaikan: this.kodePerbaikan,
                 pelanggan_id: this.formData.pelanggan_id,
-                tanggal_masuk: this.formData.tanggalMasuk, // Tanggal sudah dalam format yyyy-mm-dd
-                tanggal_selesai: this.formData.tanggalKeluar, // Tanggal sudah dalam format yyyy-mm-dd
+                tanggal_masuk: this.formData.tanggalMasuk,
+                tanggal_selesai: this.formData.tanggalKeluar,
                 status_pembayaran: this.formData.statusPembayaran,
                 layanan_ids: this.formData.jenisPerbaikanList.map(jenis => jenis.layanan_id),
                 biaya_perbaikan: this.totalBiaya
             };
 
-            axios.post('http://localhost:50/daftarperbaikan', payload)
+            axios.put(`http://localhost:50/daftarperbaikan/${this.$route.params.perbaikan_id}`, payload)
                 .then(() => {
-                    alert('Data berhasil disimpan.');
-                    this.resetForm();
+                    alert('Data berhasil diperbarui.');
                     this.$router.push({ name: 'perbaikan' });
                 })
                 .catch(error => console.error('Error:', error));
-        },
-        resetForm() {
-            this.formData = {
-                pelanggan_id: '',
-                tanggalMasuk: '',
-                tanggalKeluar: '',
-                statusPembayaran: '',
-                jenisPerbaikanList: [{ layanan_id: '', harga: '' }]
-            };
-        },
-        tambahPelanggan() {
-            this.$router.push({ name: 'pelangganInsert' });
         }
     }
 };

@@ -150,7 +150,6 @@ export default {
       searchQuery: '',
       activeTab: 'uangMasuk',
       filteredLaporanKeuangan: [],
-      searchQuery: '',
     };
   },
 
@@ -170,12 +169,12 @@ export default {
   },
 
   methods: {
-    filterSearch() {
-      this.filteredLaporanKeuangan = this.laporan_keuangan.filter(item => {
-        return item.kode_perbaikan.toLowerCase().includes(this.searchQuery.toLowerCase());
-      });
-      this.currentPage = 1; // Reset to the first page
-    },
+    // filterSearch() {
+    //   this.filteredLaporanKeuangan = this.laporan_keuangan.filter(item => {
+    //     return item.kode_perbaikan.toLowerCase().includes(this.searchQuery.toLowerCase());
+    //   });
+    //   this.currentPage = 1; // Reset to the first page
+    // },
     getLaporanKeuangan() {
       axios.get(this.api)
         .then(response => {
